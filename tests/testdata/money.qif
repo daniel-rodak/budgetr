@@ -1,0 +1,48 @@
+!Type:Bank
+D2017-09-17
+T0.00
+CX
+POpening Balance
+L[Idea - ZYSKOWNE Ochrona]
+^
+D2017-09-17
+T6,699.99
+PBla Bla
+L[Idea - Idealne]
+^
+D2017-09-30
+T2.60
+PBank
+LInvestment Income:Tax-Exempt Interest
+^
+D2017-10-31
+T10.14
+PBank
+LInvestment Income:Tax-Exempt Interest
+^
+D2017-11-30
+T9.83
+PBank
+LInvestment Income:Tax-Exempt Interest
+^
+D2017-12-31
+T10.17
+PBank
+LInvestment Income:Tax-Exempt Interest
+^
+D2018-01-02
+T-5.00
+PBank
+LBank Charges
+^
+D2018-01-31
+T10.10
+PBank
+LInvestment Income:Tax-Exempt Interest
+^
+D2018-02-19
+MWakacje Rzym
+T-858.01
+PMarzenka
+L[Idea - ZYSKOWNE FWN]
+^

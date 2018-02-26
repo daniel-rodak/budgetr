@@ -1,0 +1,1 @@
+CNSTsupportedBanks <- c("mbank", "idea")
