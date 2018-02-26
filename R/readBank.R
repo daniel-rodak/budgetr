@@ -32,6 +32,7 @@ readMbank <- function(file, ...) {
   colnames(tbl) <- c("Date", "Type", "Title", "Payee", "Amount")
   tbl$Date <- as.Date(tbl$Date)
   tbl$Amount <- as.numeric(gsub(",", ".", gsub(" ", "", tbl$Amount)))
+  tbl$Category <- rep("", nrow(tbl))
   return(tbl)
 }
 
@@ -44,5 +45,6 @@ readIdea <- function(file, ...) {
   colnames(tbl) <- c("Date", "Type", "Title", "Payee", "Amount")
   tbl$Date <- as.Date(as.character(tbl$Date), "%Y%m%d")
   tbl$Amount <- ifelse(tbl$Type == 'uznanie', -1, 1) * tbl$Amount
+  tbl$Category <- rep("", nrow(tbl))
   return(tbl)
 }
