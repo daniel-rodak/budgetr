@@ -5,8 +5,9 @@
 #' @param file path to file with QIF transaction data
 #'
 #' @author Daniel Rodak
+#' @importFrom utils maintainer
 #' @export
-readQIF <- function(file, ...) {
+readQIF <- function(file) {
   stopifnot(file.exists(file))
   con <- file(file)
   on.exit(close(con))
@@ -24,6 +25,7 @@ readQIF <- function(file, ...) {
 }
 
 #' Parse single QIF line
+#' @param x character vector with QIF line between '^' delimiters
 parseQIFLine <- function(x) {
   stopifnot(all(c(any(grepl("^D", x)), any(grepl("^P", x)), any(grepl("^T", x)))))
 
@@ -32,7 +34,7 @@ parseQIFLine <- function(x) {
   payee <- substring(grep("^P", x, value = TRUE), 2)
   amount <- substring(grep("^T", x, value = TRUE), 2)
   amount <- as.numeric(gsub(",", "", amount))
-  type <- ifelse(sign(amount) < 0, "Przelew Wychodzący", "Przelew Przychodzący")
+  type <- ifelse(sign(amount) < 0, "Przelew Przych.", "Przelew Wych.")
   category <- substring(grep("^L", x, value = TRUE), 2)
   title <- ifelse(length(title) == 0, "", title)
   category <- ifelse(length(category) == 0, "", category)

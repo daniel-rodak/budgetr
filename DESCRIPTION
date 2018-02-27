@@ -8,6 +8,8 @@ Maintainer: Daniel Rodak <daniel.rodak1@gmail.com>
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 License: GPL-3
+Depends:
+    R6
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1

@@ -6,6 +6,9 @@
 \usage{
 parseQIFLine(x)
 }
+\arguments{
+\item{x}{character vector with QIF line between '^' delimiters}
+}
 \description{
 Parse single QIF line
 }

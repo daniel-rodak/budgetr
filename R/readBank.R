@@ -12,6 +12,7 @@
 #' @param ... optional arguments passed to \code{\link[utils]{read.table}}
 #'
 #' @author Daniel Rodak
+#' @importFrom utils maintainer
 #' @export
 readBank <- function(file, bank, ...) {
   if(!(bank %in% CNSTsupportedBanks)) {
@@ -24,6 +25,7 @@ readBank <- function(file, bank, ...) {
   return(read.fun(file, ...))
 }
 
+#' @importFrom utils read.table
 readMbank <- function(file, ...) {
   tbl <- read.table(file, header = TRUE, sep = ";", dec = ",",
                     quote = "\"", fill = TRUE, comment.char = "",
@@ -36,6 +38,7 @@ readMbank <- function(file, ...) {
   return(tbl)
 }
 
+#' @importFrom utils read.table
 readIdea <- function(file, ...) {
   tbl <- read.table(file, header = TRUE, sep = ";", dec = ",",
                     quote = "\"", fill = TRUE, comment.char = "",
