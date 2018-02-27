@@ -36,6 +36,7 @@
 budget <- R6::R6Class(
   classname = "budget",
   public = list(
+    name = "Nowy Budżet",
     initialize = function(path = NULL) {
       if (!is.null(path)) {
         budget <- readRDS(path)
@@ -45,6 +46,7 @@ budget <- R6::R6Class(
         private$accInit <- budget$accInit
         private$categories <- budget$categories
         private$transactions <- budget$transactions
+        self$name <- gsub("(.rds)$", "", basename(path))
       } else {
         private$path <- character()
         private$accounts <- character()
@@ -56,6 +58,7 @@ budget <- R6::R6Class(
     },
     save = function(path) {
       private$path <- path
+      self$name <- gsub("(.rds)$", "", basename(path))
       saveObj <- list(
         path = private$path,
         accounts = private$accounts,

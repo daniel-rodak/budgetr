@@ -1,5 +1,13 @@
 dashboardPage(
-  dashboardHeader(title = "Budżet domowy"),
+  dashboardHeader(
+    title = "Budżet domowy",
+    dropdownMenuOutput("loadedBudget"),
+    tags$li(
+      class = "dropdown",
+      actionButton("saveBut", "", icon = icon("floppy-disk", lib = 'glyphicon'),
+                   style = "width: 50px; height: 50px; background-color: #3c8dbc; border: none; font-size: 1.5em;")
+    )
+  ),
 
   dashboardSidebar(
     sidebarMenu(id = 'menu1',
