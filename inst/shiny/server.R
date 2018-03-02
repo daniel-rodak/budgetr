@@ -1,8 +1,31 @@
 library(magrittr)
 
 function(input, output, session) {
+  budgetName <- reactive(budgetFile$name)
   output$loadedBudget <- renderMenu({
-    notificationItem(text = budgetFile$name, icon = icon("euro", lib = "glyphicon"))
+    notificationItem(text = budgetName(), icon = icon("euro", lib = "glyphicon"))
+  })
+
+  roots = c(wd = '~/../source/repos/budgetr/tests/testdata', home = '~', base = '~/..')
+  shinyFileChoose(input, 'openBdgt', roots = roots,
+                  filetypes=c('', 'rds'), session = session)
+  shinyFileSave(input, 'saveBdgt', roots = roots,
+                filetypes=c('', 'rds'), session = session)
+  output$loadTest <- renderText(capture.output(str(parseFilePaths(roots, input$openBdgt))))
+  output$saveTest <- renderText(capture.output(str(parseSavePath(roots, input$saveBdgt))))
+
+  observeEvent(input$openBdgt, {
+    fi <- parseFilePaths(roots, input$openBdgt)
+    if (nrow(fi) == 1) {
+      budgetFile <- budget$new(as.character(fi$datapath))
+    }
+  })
+
+  observeEvent(input$saveBdgt, {
+    fi <- parseSavePath(roots, input$saveBdgt)
+    if (nrow(fi) == 1) {
+      budgetFile$save(as.character(fi$datapath))
+    }
   })
 
   observeEvent(input$addNewAcc, {

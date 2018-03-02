@@ -7,7 +7,8 @@ CNSTtransactionTemplate <- data.frame(
   Title = character(),
   Payee = character(),
   Amount = numeric(),
-  Category = character()
+  Category = character(),
+  stringsAsFactors = FALSE
 )
 CNSTdefaultBudgetCats <- c("Dochód:Regularne", "Dochód:Nieregularne",
                            "Dochód:Zyski kapitałowe", "Dochód:Zyski kapitałowe po opodatkowaniu",

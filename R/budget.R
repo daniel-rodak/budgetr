@@ -46,15 +46,15 @@ budget <- R6::R6Class(
     name = "Nowy Budżet",
     initialize = function(path = NULL) {
       if (!is.null(path)) {
-        budget <- readRDS(path)
-        private$validateBudget(budget)
-        private$path <- budget$path
-        private$accounts <- budget$accounts
-        private$accInit <- budget$accInit
-        private$accBalance <- budget$accBalance
-        private$categories <- budget$categories
-        private$budgetCats <- budget$budgetCats
-        private$transactions <- budget$transactions
+        bdgt <- readRDS(path)
+        private$validateBudget(bdgt)
+        private$path <- bdgt$path
+        private$accounts <- bdgt$accounts
+        private$accInit <- bdgt$accInit
+        private$accBalance <- bdgt$accBalance
+        private$categories <- bdgt$categories
+        private$budgetCats <- bdgt$budgetCats
+        private$transactions <- bdgt$transactions
         self$name <- gsub("(.rds)$", "", basename(path))
       } else {
         private$path <- character()
@@ -74,6 +74,7 @@ budget <- R6::R6Class(
         path = private$path,
         accounts = private$accounts,
         accInit = private$accInit,
+        accBalance = private$accBalance,
         categories = private$categories,
         budgetCats = private$budgetCats,
         transactions = private$transactions

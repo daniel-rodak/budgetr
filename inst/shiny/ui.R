@@ -11,6 +11,7 @@ dashboardPage(
 
   dashboardSidebar(
     sidebarMenu(id = 'menu1',
+      menuItem("Otwórz/Zapisz", tabName = "os", icon = icon("floppy-disk", lib = "glyphicon")),
       menuItem("Ustawienia budżetu", tabName = "settings", icon = icon("cog", lib = "glyphicon")),
       menuItem("Importuj dane", tabName = "import", icon = icon("download"))
     ),
@@ -24,6 +25,25 @@ dashboardPage(
 
   dashboardBody(
     tabItems(
+      tabItem(
+        tabName = 'os',
+        fluidRow(
+          box(
+            width = 6, title = "Otwórz budżet",
+            shinyFilesButton('openBdgt', "Wybierz plik", "Wybierz plik budżetu",
+                            multiple = FALSE),
+            textOutput('loadTest')
+          ),
+          box(
+            width = 6, title = "Zapisz budżet",
+            shinySaveButton('saveBdgt', "Wybierz lokalizację",
+                            "Wybierz lokalizację do zapisu",
+                            filetype = list(RDS = 'rds')),
+            textOutput('saveTest')
+          )
+        )
+      ),
+
       tabItem(
         tabName = 'settings',
         fluidRow(
@@ -71,8 +91,7 @@ dashboardPage(
         fluidRow(
           box(
             width = 12, title = "Zaimportowane dane",
-            rHandsontableOutput('dataTable'),
-            textOutput('test1')
+            rHandsontableOutput('dataTable')
           )
         )
       )
