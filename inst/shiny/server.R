@@ -116,7 +116,7 @@ function(input, output, session) {
   output$splitTable <- renderRHandsontable({
     req(input$selTransTable)
     DF_sel <- hot_to_r(input$selTransTable)
-    nrep <- input$numSplitCat - 1
+    nrep <- 1 # input$numSplitCat - 1
     dfrm <- data.frame(
       Kategoria = c(DF_sel$Category, rep("", nrep)),
       Kwota = c(DF_sel$Amount, rep(0, nrep)),

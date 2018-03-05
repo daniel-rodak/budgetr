@@ -105,9 +105,9 @@ dashboardPage(
             fluidRow(
               column(
                 6,
-                sliderInput('numSplitCat', 'Liczba podkategorii',
-                            min = 2, max = max(2, length(budgetFile$getCategories())),
-                            step = 1, value = 2, width = "50%"),
+                # sliderInput('numSplitCat', 'Liczba podkategorii',
+                #             min = 2, max = max(2, length(budgetFile$getCategories())),
+                #             step = 1, value = 2, width = "50%"),
                 textOutput('leftAmount')
               ),
               column(
