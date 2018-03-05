@@ -1,12 +1,12 @@
 dashboardPage(
   dashboardHeader(
     title = "Budżet domowy",
-    dropdownMenuOutput("loadedBudget"),
     tags$li(
       class = "dropdown",
       actionButton("saveBut", "", icon = icon("floppy-disk", lib = 'glyphicon'),
                    style = "width: 50px; height: 50px; background-color: #3c8dbc; border: none; font-size: 1.5em;")
-    )
+    ),
+    tags$li(class = 'dropdown', textOutput('loadedBudget'))
   ),
 
   dashboardSidebar(
@@ -90,8 +90,31 @@ dashboardPage(
         tabName = 'import',
         fluidRow(
           box(
-            width = 12, title = "Zaimportowane dane",
-            rHandsontableOutput('dataTable')
+            width = 12,
+            title = "Zaimportowane dane",
+            rHandsontableOutput('dataTable', height = "50vh")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,
+            actionButton('splitTrans', "Podziel transakcję"),
+            actionButton('applySplit', "Akceptuj"),
+            rHandsontableOutput('selTransTable'),
+            tags$br(),
+            fluidRow(
+              column(
+                6,
+                sliderInput('numSplitCat', 'Liczba podkategorii',
+                            min = 2, max = max(2, length(budgetFile$getCategories())),
+                            step = 1, value = 2, width = "50%"),
+                textOutput('leftAmount')
+              ),
+              column(
+                6,
+                rHandsontableOutput('splitTable')
+              )
+            )
           )
         )
       )

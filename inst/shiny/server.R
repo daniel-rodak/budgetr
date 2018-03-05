@@ -1,10 +1,12 @@
 library(magrittr)
 
 function(input, output, session) {
-  budgetName <- reactive(budgetFile$name)
-  output$loadedBudget <- renderMenu({
-    notificationItem(text = budgetName(), icon = icon("euro", lib = "glyphicon"))
+  timer <- reactiveTimer(100)
+  budgetName <- reactive({
+    timer()
+    budgetFile$name
   })
+  output$loadedBudget <- renderText(budgetName())
 
   roots = c(wd = '~/../source/repos/budgetr/tests/testdata', home = '~', base = '~/..')
   shinyFileChoose(input, 'openBdgt', roots = roots,
@@ -38,7 +40,7 @@ function(input, output, session) {
   })
 
   output$accList <- renderTable({
-    reactiveTimer(100)()
+    timer()
     data.frame(
       Konto = budgetFile$getAccounts(),
       Saldo = budgetFile$getAccountBalances()
@@ -63,7 +65,7 @@ function(input, output, session) {
   })
 
   output$catList <- renderTable({
-    reactiveTimer(100)()
+    timer()
     cats <- budgetFile$getCategories()
     data.frame(
       Kategoria = cats,
@@ -90,5 +92,61 @@ function(input, output, session) {
               source = budgetFile$getCategories(), strict = TRUE)
   })
 
-  # output$test1 <- renderText(str(input$dataTable_select))
+  observeEvent(input$splitTrans, {
+    req(input$dataTable_select)
+    sel <- input$dataTable_select$select
+    if (sel$r != sel$r2) {
+      showNotification("Wybierz jedną transakcję", type = 'warning', duration = 20)
+    } else {
+      if (is.null(input$dataTable)) {
+        DF_sel <- DF()[sel$r, , drop = FALSE]
+      } else {
+        DF_sel <- hot_to_r(input$dataTable)[sel$r, , drop = FALSE]
+      }
+
+      output$selTransTable <- renderRHandsontable({
+        rhandsontable(DF_sel, stretchH = "all") %>%
+          hot_context_menu(allowColEdit = FALSE) %>%
+          hot_col(col = "Category", type = "autocomplete",
+                  source = budgetFile$getCategories(), strict = TRUE)
+      })
+    }
+  })
+
+  output$splitTable <- renderRHandsontable({
+    req(input$selTransTable)
+    DF_sel <- hot_to_r(input$selTransTable)
+    nrep <- input$numSplitCat - 1
+    dfrm <- data.frame(
+      Kategoria = c(DF_sel$Category, rep("", nrep)),
+      Kwota = c(DF_sel$Amount, rep(0, nrep)),
+      stringsAsFactors = FALSE
+    )
+    rhandsontable(dfrm, stretchH = "all") %>%
+      hot_context_menu(allowColEdit = FALSE, allowRowEdit = FALSE) %>%
+      hot_col(col = "Kategoria", type = "autocomplete",
+              source = budgetFile$getCategories(), strict = TRUE)
+  })
+
+  output$leftAmount <- renderText({
+    req(input$splitTable)
+    req(input$selTransTable)
+    DF_sel <- hot_to_r(input$selTransTable)
+    dfSplit <- hot_to_r(input$splitTable)
+    unassigned <- DF_sel$Amount - sum(dfSplit$Kwota)
+    sprintf("Nieprzydzielona kwota: %0.2f zł", unassigned)
+  })
+
+  observeEvent(input$applySplit, {
+    req(input$splitTable)
+    req(input$selTransTable)
+    DF_sel <- hot_to_r(input$selTransTable)
+    dfSplit <- hot_to_r(input$splitTable)
+    if (sum(dfSplit$Kwota) != DF_sel$Amount) {
+      showNotification(paste("Suma podkategorii nie równa się", DF_sel$Amount),
+                       type = 'warning', duration = 20)
+    } else {
+      str(dfSplit)
+    }
+  })
 }
