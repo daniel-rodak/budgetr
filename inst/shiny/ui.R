@@ -13,13 +13,21 @@ dashboardPage(
     sidebarMenu(id = 'menu1',
       menuItem("Otwórz/Zapisz", tabName = "os", icon = icon("floppy-disk", lib = "glyphicon")),
       menuItem("Ustawienia budżetu", tabName = "settings", icon = icon("cog", lib = "glyphicon")),
+      menuItem("Transakcje", tabName = 'trans', icon = icon("list-alt", lib = "glyphicon")),
       menuItem("Importuj dane", tabName = "import", icon = icon("download"))
     ),
     conditionalPanel(condition = "input.menu1 == 'import'",
-      fileInput("inputData", "Wybierz plik", accept = c("text/csv", "text/plain")),
+      fileInput("inputData", "Wybierz plik", accept = c("text/csv", "text/plain", "text/qif")),
       selectInput("fileType", "Rodzaj pliku",
                   choices = c("QIF" = "QIF", "mBank" = "mbank", "Idea Bank" = "idea")),
-      actionButton("loadFile", "Importuj")
+      actionButton("loadFile", "Importuj"),
+      selectInput("addDataAcc", "Wybierz konto docelowe",
+                  choices = budgetFile$getAccounts()),
+      actionButton("addData", "Wgraj transakcje")
+    ),
+    conditionalPanel(condition = "input.menu1 == 'trans'",
+      selectInput("transDataAcc", "Wybierz konto docelowe",
+                  choices = budgetFile$getAccounts())
     )
   ),
 
@@ -48,15 +56,25 @@ dashboardPage(
         tabName = 'settings',
         fluidRow(
           box(width = 12, title = "Konta", collapsible = TRUE,
-            box(
-              width = 6, title = "Nowe konto",
-              textInput('newAccName', 'Nazwa konta:'),
-              numericInput('newAccInit', "Saldo początkowe:", value = 0),
-              actionButton('addNewAcc', "Dodaj konto")
+            column(width = 6,
+              box(
+                width = NULL, title = "Nowe konto",
+                textInput('newAccName', 'Nazwa konta:'),
+                numericInput('newAccInit', "Saldo początkowe:", value = 0),
+                actionButton('addNewAcc', "Dodaj konto")
+              ),
+              box(
+                width = NULL, title = "Usuń konto", collapsible = TRUE, collapsed = TRUE,
+                selectInput('delAccName', 'Nazwa konta:',
+                            choices = budgetFile$getAccounts()),
+                actionButton('delAcc', "Usuń konto")
+              )
             ),
-            box(
-              width = 6, title = "Lista kont",
-              tableOutput('accList')
+            column(width = 6,
+              box(
+                width = 6, title = "Lista kont",
+                tableOutput('accList')
+              )
             )
           )
         ),
@@ -74,6 +92,19 @@ dashboardPage(
                 width = NULL, title = "Nowa kategoria budżetowa",
                 textInput('newBudgCatName', 'Nazwa kategorii budżetowej:'),
                 actionButton('addNewBudgCat', "Dodaj kategorię budżetową")
+              ),
+              box(
+                width = NULL, title = "Usuń kategorię", collapsible = TRUE, collapsed = TRUE,
+                selectInput('delCatName', 'Nazwa kategorii do usunięcia:',
+                            choices = unname(budgetFile$getCategories())),
+                uiOutput("mvCatNameUI"),
+                actionButton('delCat', "Usuń kategorię")
+              ),
+              box(
+                width = NULL, title = "Usuń kategorię budżetową", collapsible = TRUE, collapsed = TRUE,
+                selectInput('delBudgCatName', 'Nazwa kategorii budżetowej:',
+                            choices = budgetFile$getBudgetCategories()),
+                actionButton('delBudgCat', "Usuń kategorię budżetową")
               )
             ),
             column(width = 6,
@@ -87,32 +118,36 @@ dashboardPage(
       ),
 
       tabItem(
+        tabName = 'trans',
+        fluidRow(
+          box(
+            width = 12,
+            title = "Transakcje",
+            tableOutput("transData")
+          )
+        )
+      ),
+
+      tabItem(
         tabName = 'import',
         fluidRow(
           box(
             width = 12,
             title = "Zaimportowane dane",
-            rHandsontableOutput('dataTable', height = "50vh")
+            rHandsontableOutput('dataTable', height = "30vh")
           )
         ),
         fluidRow(
           box(
-            width = 12,
+            width = 6, collapsible = TRUE,
             actionButton('splitTrans', "Podziel transakcję"),
             actionButton('applySplit', "Akceptuj"),
-            rHandsontableOutput('selTransTable'),
-            tags$br(),
+            tableOutput('selTransTable'),
             fluidRow(
               column(
-                6,
-                # sliderInput('numSplitCat', 'Liczba podkategorii',
-                #             min = 2, max = max(2, length(budgetFile$getCategories())),
-                #             step = 1, value = 2, width = "50%"),
-                textOutput('leftAmount')
-              ),
-              column(
-                6,
-                rHandsontableOutput('splitTable')
+                12,
+                textOutput('leftAmount'),
+                rHandsontableOutput('splitTable', height = "20vh")
               )
             )
           )

@@ -67,9 +67,12 @@ budget <- R6::R6Class(
       }
       return(invisible(self))
     },
-    save = function(path) {
-      private$path <- path
-      self$name <- gsub("(.rds)$", "", basename(path))
+    save = function(path = NULL) {
+      if (!is.null(path)) {
+        private$path <- path
+      }
+      length(private$path) == 1 || stop("Brakuje ścieżki zapisu")
+      self$name <- gsub("(.rds)$", "", basename(private$path))
       saveObj <- list(
         path = private$path,
         accounts = private$accounts,
@@ -79,7 +82,7 @@ budget <- R6::R6Class(
         budgetCats = private$budgetCats,
         transactions = private$transactions
       )
-      saveRDS(saveObj, file = path)
+      saveRDS(saveObj, file = private$path)
       return(invisible(self))
     },
 
@@ -97,7 +100,7 @@ budget <- R6::R6Class(
     },
     deleteCategory = function(category) {
       private$validateDeleteCategory(category)
-      private$categories <- sort(setdiff(private$categories, category))
+      private$categories <- sort(private$categories[!(private$categories %in% category)])
       return(invisible(self))
     },
     getCategories = function() {
@@ -164,8 +167,8 @@ budget <- R6::R6Class(
         account <- setdiff(account, notExistingAcc)
       }
       private$accounts <- sort(setdiff(private$accounts, account))
-      private$accInit <- private$accInit[names(private$accInit %in% private$accounts)]
-      private$accBalance <- private$accBalance[names(private$accBalance %in% private$accounts)]
+      private$accInit <- private$accInit[private$accounts]
+      private$accBalance <- private$accBalance[private$accounts]
       private$transactions <- private$transactions[private$accounts]
       return(invisible(self))
     },
@@ -226,7 +229,7 @@ budget <- R6::R6Class(
     transactions = list(),
 
     updateAccBalance = function(account) {
-      private$accBalance[[account]] <- private$accInit + sum(private$transactions$Amount)
+      private$accBalance[[account]] <- private$accInit[[account]] + sum(private$transactions[[account]]$Amount)
     },
 
     validateBudget = function(x) {

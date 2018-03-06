@@ -27,9 +27,17 @@ readBank <- function(file, bank, ...) {
 
 #' @importFrom utils read.table
 readMbank <- function(file, ...) {
+  callArgs <- as.list(match.call())
+  if (is.null(callArgs$encoding)) {
+    if (.Platform$OS.type == 'unix')
+      enc <- 'latin1'
+  } else {
+    enc <- callArgs$encoding
+  }
   tbl <- read.table(file, header = TRUE, sep = ";", dec = ",",
                     quote = "\"", fill = TRUE, comment.char = "",
-                    skip = 37, stringsAsFactors = FALSE, ...)
+                    skip = 37, stringsAsFactors = FALSE,
+                    encoding = enc, ...)
   tbl <- tbl[1:(nrow(tbl) - 2), c(2, 3, 4, 5, 7)]
   colnames(tbl) <- c("Date", "Type", "Title", "Payee", "Amount")
   tbl$Date <- as.Date(tbl$Date)
