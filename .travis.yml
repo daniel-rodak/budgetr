@@ -1,2 +1,3 @@
 language: r
 r: 3.4.1
+warnings_are_errors: false
