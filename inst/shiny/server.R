@@ -11,7 +11,8 @@ function(input, output, session) {
 # Save and load budget ----------------------------------------------------
 
 
-  roots = c(home = '~/Desktop', wd = '.', base = '~/..')
+  # roots = c(home = '~/Desktop', wd = '.', base = '~/..')
+  roots = c(home = '~/../Desktop')
   shinyFileChoose(input, 'openBdgt', roots = roots,
                   filetypes=c('', 'rds'), session = session)
   shinyFileSave(input, 'saveBdgt', roots = roots,
@@ -235,20 +236,22 @@ function(input, output, session) {
               strict = TRUE)
   })
 
-  DF_sel <- eventReactive(input$splitTrans, {
+  DF_sel <- reactiveVal()
+  observeEvent(input$splitTrans, {
     req(input$dataTable_select)
     sel <- input$dataTable_select$select
     if (sel$r != sel$r2) {
       showNotification("Wybierz jedną transakcję", type = 'warning', duration = 20)
     } else {
       if (is.null(input$dataTable)) {
-        DF_sel <- DF()[sel$r, , drop = FALSE]
+        dfrm <- DF()[sel$r, , drop = FALSE]
       } else {
-        DF_sel <- tr_to_r(input$dataTable)[sel$r, , drop = FALSE]
+        dfrm <- tr_to_r(input$dataTable)[sel$r, , drop = FALSE]
       }
     }
-    DF_sel
+    DF_sel(dfrm)
   })
+
   observeEvent(input$splitTrans, {
     output$selTransTable <- renderTable(DF_sel())
 
@@ -301,6 +304,8 @@ function(input, output, session) {
     } else if (isTruthy(input$transDataAcc)){
       dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
       DF(NULL)
+      DF_sel(NULL)
+      output$splitTable <- renderRHandsontable({NULL})
     }
   })
 }

@@ -31,6 +31,8 @@ readMbank <- function(file, ...) {
   if (is.null(callArgs$encoding)) {
     if (.Platform$OS.type == 'unix')
       enc <- 'latin1'
+    else
+      enc <- 'unknown'
   } else {
     enc <- callArgs$encoding
   }
@@ -55,7 +57,7 @@ readIdea <- function(file, ...) {
   tbl <- tbl[, c(2, 16, 15, 10, 5)]
   colnames(tbl) <- c("Date", "Type", "Title", "Payee", "Amount")
   tbl$Date <- as.Date(as.character(tbl$Date), "%Y%m%d")
-  tbl$Amount <- ifelse(tbl$Type == 'uznanie', -1, 1) * tbl$Amount
+  tbl$Amount <- ifelse(tbl$Type == 'uznanie', 1, -1) * tbl$Amount
   tbl$Category <- rep("", nrow(tbl))
   return(tbl)
 }
