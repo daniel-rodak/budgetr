@@ -14,16 +14,20 @@ dashboardPage(
       menuItem("Otwórz/Zapisz", tabName = "os", icon = icon("floppy-disk", lib = "glyphicon")),
       menuItem("Ustawienia budżetu", tabName = "settings", icon = icon("cog", lib = "glyphicon")),
       menuItem("Transakcje", tabName = 'trans', icon = icon("list-alt", lib = "glyphicon")),
-      menuItem("Importuj dane", tabName = "import", icon = icon("download"))
+      menuItem("Dodaj transakcje", tabName = "import", icon = icon("download"))
     ),
     conditionalPanel(condition = "input.menu1 == 'import'",
+      tags$h4("Importuj"),
       fileInput("inputData", "Wybierz plik", accept = c("text/csv", "text/plain", "text/qif")),
       selectInput("fileType", "Rodzaj pliku",
                   choices = c("QIF" = "QIF", "mBank" = "mbank", "Idea Bank" = "idea")),
       actionButton("loadFile", "Importuj"),
+      tags$h4("Dodaj ręcznie"),
+      actionButton("manualTrans", "Dodaj"),
+      tags$h4("Wgraj do konta"),
       selectInput("addDataAcc", "Wybierz konto docelowe",
                   choices = budgetFile$getAccounts()),
-      actionButton("addData", "Wgraj transakcje")
+      actionButton("addData", "Wgraj")
     ),
     conditionalPanel(condition = "input.menu1 == 'trans'",
       selectInput("transDataAcc", "Wybierz konto docelowe",
@@ -123,7 +127,16 @@ dashboardPage(
           box(
             width = 12,
             title = "Transakcje",
-            tableOutput("transData")
+            DT::dataTableOutput("transData")
+          )
+        ),
+        fluidRow(
+          box(
+            width = 12,  collapsible = TRUE, collapsed = FALSE,
+            title = "Edycja",
+            actionButton('applyEdit', "Akceptuj"),
+            actionButton('delTrans', "Usuń"),
+            rHandsontableOutput('transEditTable', height = '20vh')
           )
         )
       ),

@@ -11,7 +11,7 @@ function(input, output, session) {
 # Save and load budget ----------------------------------------------------
 
 
-  roots = c(wd = '.', home = '~', base = '~/..')
+  roots = c(home = '~/Desktop', wd = '.', base = '~/..')
   shinyFileChoose(input, 'openBdgt', roots = roots,
                   filetypes=c('', 'rds'), session = session)
   shinyFileSave(input, 'saveBdgt', roots = roots,
@@ -151,9 +151,56 @@ function(input, output, session) {
 
 # Transaction data --------------------------------------------------------
 
-  output$transData <- renderTable({
-    timer()
-    budgetFile$getTransactionTable(input$transDataAcc)
+  dfTrans <- reactiveVal()
+  observeEvent(input$transDataAcc, {
+    req(input$transDataAcc)
+    dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
+  })
+  output$transData <- DT::renderDataTable(dfTrans())
+
+  dfTransEdit <- eventReactive(input$transData_rows_selected, {
+    req(dfTrans())
+    dfTrans()[input$transData_rows_selected, budgetr:::CNSTtransactionCols]
+  })
+
+  output$transEditTable <- renderRHandsontable({
+    req(dfTransEdit())
+    rhandsontable(dfTransEdit(),
+                  stretchH = "all", selectCallback = TRUE) %>%
+      hot_context_menu(allowColEdit = FALSE, allowRowEdit = FALSE) %>%
+      hot_col(col = "Category", type = "autocomplete",
+              source = budgetCats(),
+              strict = TRUE)
+  })
+
+  observeEvent(input$delTrans, {
+    req(dfTransEdit())
+    req(input$transDataAcc)
+    trIds <- row.names(dfTransEdit())
+    tr <- try(budgetFile$deleteTransaction(input$transDataAcc, trIds))
+    if (inherits(tr, 'try-error')) {
+      showNotification(tr, type = 'error', duration = 20)
+    } else if (isTruthy(input$transDataAcc)){
+      dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
+    }
+  })
+
+  observeEvent(input$applyEdit, {
+    req(dfTransEdit())
+    req(input$transEditTable)
+    req(input$transDataAcc)
+    newTrans <- tr_to_r(input$transEditTable)
+    trIds <- row.names(dfTransEdit())
+    row.names(newTrans) <- trIds
+    tr <- try({
+      budgetFile$deleteTransaction(input$transDataAcc, trIds)
+      budgetFile$addTransaction(input$transDataAcc, newTrans)
+    })
+    if (inherits(tr, 'try-error')) {
+      showNotification(tr, type = 'error', duration = 20)
+    } else if (isTruthy(input$transDataAcc)){
+      dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
+    }
   })
 
 # Import data -------------------------------------------------------------
@@ -175,6 +222,10 @@ function(input, output, session) {
     }
   })
 
+  observeEvent(input$manualTrans, {
+    DF(budgetr:::CNSTtrOneRowTemplate)
+  })
+
   output$dataTable <- renderRHandsontable({
     req(DF())
     rhandsontable(DF(), stretchH = "all", selectCallback = TRUE) %>%
@@ -193,7 +244,7 @@ function(input, output, session) {
       if (is.null(input$dataTable)) {
         DF_sel <- DF()[sel$r, , drop = FALSE]
       } else {
-        DF_sel <- hot_to_r(input$dataTable)[sel$r, , drop = FALSE]
+        DF_sel <- tr_to_r(input$dataTable)[sel$r, , drop = FALSE]
       }
     }
     DF_sel
@@ -233,7 +284,7 @@ function(input, output, session) {
       splitTrans$Amount <- dfSplit$Kwota
       splitTrans$Category <- dfSplit$Kategoria
       transID <- rownames(DF_sel())
-      DFhot <- hot_to_r(input$dataTable)
+      DFhot <- tr_to_r(input$dataTable)
       newData <- DFhot[rownames(DFhot) != transID, ]
       newData <- rbind(newData, splitTrans)
       newData <- newData[order(newData$Date, rownames(newData)), ]
@@ -243,10 +294,13 @@ function(input, output, session) {
 
   observeEvent(input$addData, {
     req(input$dataTable)
-    trans <- hot_to_r(input$dataTable)
+    trans <- tr_to_r(input$dataTable)
     tr <- try(budgetFile$addTransaction(input$addDataAcc, trans))
     if (inherits(tr, 'try-error')) {
       showNotification(tr, type = 'error', duration = 20)
+    } else if (isTruthy(input$transDataAcc)){
+      dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
+      DF(NULL)
     }
   })
 }

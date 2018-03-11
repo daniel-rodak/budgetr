@@ -203,6 +203,7 @@ budget <- R6::R6Class(
     },
     deleteTransaction = function(account, trIds) {
       private$validateDeleteTransaction(account, trIds)
+      rn <- rownames(private$transactions[[account]])
       private$transactions[[account]] <- private$transactions[[account]][!(rn %in% trIds), ]
       private$updateAccBalance(account)
       return(invisible(self))
@@ -214,7 +215,7 @@ budget <- R6::R6Class(
                                    function(x) names(private$categories[private$categories == x]),
                                    FUN.VALUE = character(1L), USE.NAMES = FALSE)
       init <- private$accInit[account]
-      trn <- trn[order(trn$Date), ]
+      trn <- trn[order(trn$Date, row.names(trn)), ]
       trn$Balance <- init + cumsum(trn$Amount)
       return(trn)
     }
@@ -298,7 +299,7 @@ budget <- R6::R6Class(
     validateDeleteTransaction = function(account, trIds) {
       is.character(account) || stop("Konto nie jest wektorem tekstowym")
       length(account) == 1 || stop("Podano więcej niż jedno konto")
-      is.numeric(trIds) || stop("Identyfikatory transakcji nie są wektorem numerycznym")
+      is.character(trIds) || stop("Identyfikatory transakcji nie są wektorem nazw")
       rn <- rownames(private$transactions[[account]])
       all(trIds %in% rn) || stop("Identyfikatory transakcji nie istnieją. Brakujące identyfikatory: ", paste(collapse = ", ", setdiff(trIds, rn)))
     },

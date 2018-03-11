@@ -3,6 +3,7 @@
 export(budget)
 export(readBank)
 export(readQIF)
+export(tr_to_r)
 import(R6)
 importFrom(utils,maintainer)
 importFrom(utils,read.table)
