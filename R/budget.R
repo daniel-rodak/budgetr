@@ -29,6 +29,7 @@
 #'
 #'   \item{\code{addAccount(account, initialBalance = rep(0, length(account)))}}{Add account(s) to budget}
 #'   \item{\code{deleteAccount(account)}}{Delete account(s) from budget}
+#'   \item{\code{renameAccount(account, newName)}}{Rename account}
 #'   \item{\code{setAccountInitialBalance(account, initialBalance = rep(0, length(account)))}}{Set new account(s) initial balance(s)}
 #'   \item{\code{getAccounts()}}{Return accounts vector}
 #'   \item{\code{getAccountInitialBalances()}}{Return account initial balances vector}
@@ -186,6 +187,17 @@ budget <- R6::R6Class(
       private$transactions <- private$transactions[private$accounts]
       self$updateSystemCategories()
       return(invisible(self))
+    },
+    renameAccount = function(account, newName) {
+      private$validateRenameAccount(account, newName)
+      private$accounts[private$accounts == account] <- newName
+      private$accounts <- sort(private$accounts)
+      names(private$accInit)[names(private$accInit) == account] <- newName
+      private$accInit <- private$accInit[private$accounts]
+      names(private$accBalance)[names(private$accBalance) == account] <- newName
+      private$accBalance <- private$accBalance[private$accounts]
+      names(private$transactions)[names(private$transactions) == account] <- newName
+      private$transactions <- private$transactions[private$accounts]
     },
     setAccountInitialBalance = function(account, initialBalance = rep(0, length(account))) {
       private$validateAddAccount(account, initialBalance)
@@ -350,6 +362,13 @@ budget <- R6::R6Class(
     },
     validateDeleteAccount = function(account) {
       is.character(account) || stop("Konto nie jest wektorem tekstowym")
+    },
+    validateRenameAccount = function(account, newName) {
+      is.character(account) || stop("Stare konto nie jest wektorem tekstowym")
+      is.character(newName) || stop("Nowa nazwa konta nie jest wektorem tekstowym")
+      length(account) == 1 || stop("Podano więcej niż jedno konto")
+      length(newName) == 1 || stop("Podano więcej niż jedną nową nazwę konta")
+      account %in% private$accounts || stop(account ," nie istnieje")
     },
 
     validateAddTransaction = function(account, transaction) {

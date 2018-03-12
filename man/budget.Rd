@@ -35,6 +35,7 @@ the state in RDS file. This file is a simple copy of private members.
 
   \item{\code{addAccount(account, initialBalance = rep(0, length(account)))}}{Add account(s) to budget}
   \item{\code{deleteAccount(account)}}{Delete account(s) from budget}
+  \item{\code{renameAccount(account, newName)}}{Rename account}
   \item{\code{setAccountInitialBalance(account, initialBalance = rep(0, length(account)))}}{Set new account(s) initial balance(s)}
   \item{\code{getAccounts()}}{Return accounts vector}
   \item{\code{getAccountInitialBalances()}}{Return account initial balances vector}
