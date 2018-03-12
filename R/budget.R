@@ -21,6 +21,7 @@
 #'   \item{\code{deleteCategory(category)}}{Delete transaction category(ies) from budget}
 #'   \item{\code{getCategories()}}{Return category vector}
 #'   \item{\code{moveCategory(oldCategory, newCategory)}}{Move old category to new one}
+#'   \item{\code{updateSystemCategories()}}{Set system categories to valid values}
 #'
 #'   \item{\code{addBudgetCategory(budgetCat)}}{Add transaction budget category(ies) to budget}
 #'   \item{\code{deleteBudgetCategory(budgetCat)}}{Delete transaction budget category(ies) from budget}
@@ -39,6 +40,7 @@
 #' }
 #' @author Daniel Rodak
 #' @import R6
+#' @importFrom stringi stri_split_fixed
 #' @export
 budget <- R6::R6Class(
   classname = "budget",
@@ -117,6 +119,17 @@ budget <- R6::R6Class(
       }
       return(invisible(self))
     },
+    updateSystemCategories = function() {
+      private$validateUpdateSystemCategories()
+      currSysCats <- private$categories[names(private$categories) == "Systemowe"]
+      if (length(currSysCats) > 0) {
+        self$deleteCategory(unname(currSysCats))
+      }
+      if (length(private$accounts) > 0) {
+        sysCats <- paste0("Przelew:", private$accounts)
+        self$addCategory(sysCats, rep("Systemowe", length(private$accounts)))
+      }
+    },
 
     addBudgetCategory = function(budgetCat) {
       private$validateAddBudgetCategory(budgetCat)
@@ -156,6 +169,7 @@ budget <- R6::R6Class(
         private$transactions[[x]] <- CNSTtransactionTemplate
       })
       private$transactions <- private$transactions[private$accounts]
+      self$updateSystemCategories()
       return(invisible(self))
     },
     deleteAccount = function(account) {
@@ -170,6 +184,7 @@ budget <- R6::R6Class(
       private$accInit <- private$accInit[private$accounts]
       private$accBalance <- private$accBalance[private$accounts]
       private$transactions <- private$transactions[private$accounts]
+      self$updateSystemCategories()
       return(invisible(self))
     },
     setAccountInitialBalance = function(account, initialBalance = rep(0, length(account))) {
@@ -197,6 +212,26 @@ budget <- R6::R6Class(
 
     addTransaction = function(account, transaction) {
       private$validateAddTransaction(account, transaction)
+      # handle system categories
+      sysCats <- private$categories[names(private$categories) == 'Systemowe']
+      if (length(sysCats) > 0) {
+        sysTrans <- transaction[transaction$Category %in% sysCats, , drop = FALSE]
+        if (nrow(sysTrans) > 0) {
+          targetAcc <- stringi::stri_split_fixed(unique(sysTrans$Category), ":",
+                                                 simplify = TRUE)[, 2]
+          if (account %in% targetAcc) {
+            stop("Nieprawidłowy przelew na to samo konto")
+          }
+          for(acc in targetAcc) {
+            targetTrans <- sysTrans[sysTrans$Category == paste0("Przelew:", acc), ]
+            targetTrans$Amount <- -targetTrans$Amount
+            targetTrans$Category <- paste0("Przelew:", account)
+            private$transactions[[acc]] <- rbind(private$transactions[[acc]], targetTrans)
+            private$updateAccBalance(acc)
+          }
+        }
+      }
+
       private$transactions[[account]] <- rbind(private$transactions[[account]], transaction)
       private$updateAccBalance(account)
       return(invisible(self))
@@ -204,6 +239,31 @@ budget <- R6::R6Class(
     deleteTransaction = function(account, trIds) {
       private$validateDeleteTransaction(account, trIds)
       rn <- rownames(private$transactions[[account]])
+      # handle system categories
+      # TODO: faster implementation without loop over rows
+      sysCats <- private$categories[names(private$categories) == 'Systemowe']
+      if (length(sysCats) > 0) {
+        sysTrans <- private$transactions[[account]][(rn %in% trIds) & (private$transactions[[account]]$Category %in% sysCats), , drop = FALSE]
+        if (nrow(sysTrans) > 0) {
+          for (r in 1:nrow(sysTrans)) {
+            row <- sysTrans[r, , drop = FALSE]
+            targetAcc <- stringi::stri_split_fixed(row$Category, ":", simplify = TRUE)[, 2]
+            targetSysTrans <- private$transactions[[targetAcc]]
+            targetRn <- rownames(targetSysTrans)
+            targetTrans <- targetSysTrans[(targetSysTrans$Date == row$Date) &
+                                            (targetSysTrans$Type == row$Type) &
+                                            (targetSysTrans$Title == row$Title) &
+                                            (targetSysTrans$Payee == row$Payee) &
+                                            (targetSysTrans$Amount == -row$Amount) &
+                                            (targetSysTrans$Category == paste0("Przelew:", account)), , drop = FALSE]
+            if (nrow(targetTrans) > 0) {
+              private$transactions[[targetAcc]] <- private$transactions[[targetAcc]][!(targetRn == rownames(targetTrans)[1]), ]
+              private$updateAccBalance(targetAcc)
+            }
+          }
+        }
+      }
+
       private$transactions[[account]] <- private$transactions[[account]][!(rn %in% trIds), ]
       private$updateAccBalance(account)
       return(invisible(self))
@@ -269,6 +329,10 @@ budget <- R6::R6Class(
       length(newCategory) == 1 || stop("Podano więcej niż jedną nową kategorię")
       oldCategory %in% private$categories || stop(oldCategory ," nie istnieje")
       newCategory %in% private$categories || stop(newCategory ," nie istnieje")
+    },
+    validateUpdateSystemCategories = function() {
+      if (!("Systemowe" %in% private$budgetCats))
+        self$addBudgetCategory("Systemowe")
     },
 
     validateAddBudgetCategory = function(budgetCat) {

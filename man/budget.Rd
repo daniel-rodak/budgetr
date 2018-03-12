@@ -27,6 +27,7 @@ the state in RDS file. This file is a simple copy of private members.
   \item{\code{deleteCategory(category)}}{Delete transaction category(ies) from budget}
   \item{\code{getCategories()}}{Return category vector}
   \item{\code{moveCategory(oldCategory, newCategory)}}{Move old category to new one}
+  \item{\code{updateSystemCategories()}}{Set system categories to valid values}
 
   \item{\code{addBudgetCategory(budgetCat)}}{Add transaction budget category(ies) to budget}
   \item{\code{deleteBudgetCategory(budgetCat)}}{Delete transaction budget category(ies) from budget}
