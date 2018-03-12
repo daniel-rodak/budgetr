@@ -17,8 +17,6 @@ function(input, output, session) {
                   filetypes=c('', 'rds'), session = session)
   shinyFileSave(input, 'saveBdgt', roots = roots,
                 filetypes=c('', 'rds'), session = session)
-  output$loadTest <- renderText(capture.output(str(parseFilePaths(roots, input$openBdgt))))
-  output$saveTest <- renderText(capture.output(str(parseSavePath(roots, input$saveBdgt))))
 
   observeEvent(input$openBdgt, {
     fi <- parseFilePaths(roots, input$openBdgt)
@@ -157,7 +155,10 @@ function(input, output, session) {
     req(input$transDataAcc)
     dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
   })
-  output$transData <- DT::renderDataTable(dfTrans())
+  output$transData <- DT::renderDataTable(dfTrans(), filter = 'top',
+                                          options = list(
+                                            searching = FALSE
+                                          ))
 
   dfTransEdit <- eventReactive(input$transData_rows_selected, {
     req(dfTrans())
@@ -297,15 +298,19 @@ function(input, output, session) {
 
   observeEvent(input$addData, {
     req(input$dataTable)
-    trans <- tr_to_r(input$dataTable)
-    tr <- try(budgetFile$addTransaction(input$addDataAcc, trans))
-    if (inherits(tr, 'try-error')) {
-      showNotification(tr, type = 'error', duration = 20)
-    } else if (isTruthy(input$transDataAcc)){
-      dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
-      DF(NULL)
-      DF_sel(NULL)
-      output$splitTable <- renderRHandsontable({NULL})
+    trans <- try(tr_to_r(input$dataTable))
+    if (inherits(trans, 'try-error')) {
+      showNotification(trans, type = 'error', duration = 20)
+    } else {
+      tr <- try(budgetFile$addTransaction(input$addDataAcc, trans))
+      if (inherits(tr, 'try-error')) {
+        showNotification(tr, type = 'error', duration = 20)
+      } else if (isTruthy(input$transDataAcc)){
+        dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
+        DF(NULL)
+        DF_sel(NULL)
+        output$splitTable <- renderRHandsontable({NULL})
+      }
     }
   })
 }
