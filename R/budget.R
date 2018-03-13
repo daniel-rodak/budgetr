@@ -127,7 +127,7 @@ budget <- R6::R6Class(
         self$deleteCategory(unname(currSysCats))
       }
       if (length(private$accounts) > 0) {
-        sysCats <- paste0("Przelew:", private$accounts)
+        sysCats <- paste0("[", private$accounts, "]")
         self$addCategory(sysCats, rep("Systemowe", length(private$accounts)))
       }
     },
@@ -198,6 +198,9 @@ budget <- R6::R6Class(
       private$accBalance <- private$accBalance[private$accounts]
       names(private$transactions)[names(private$transactions) == account] <- newName
       private$transactions <- private$transactions[private$accounts]
+      self$addCategory(paste0("[", newName, "]"), "Systemowe")
+      self$moveCategory(paste0("[", account, "]"), paste0("[", newName, "]"))
+      self$updateSystemCategories()
     },
     setAccountInitialBalance = function(account, initialBalance = rep(0, length(account))) {
       private$validateAddAccount(account, initialBalance)
@@ -229,15 +232,14 @@ budget <- R6::R6Class(
       if (length(sysCats) > 0) {
         sysTrans <- transaction[transaction$Category %in% sysCats, , drop = FALSE]
         if (nrow(sysTrans) > 0) {
-          targetAcc <- stringi::stri_split_fixed(unique(sysTrans$Category), ":",
-                                                 simplify = TRUE)[, 2]
+          targetAcc <- gsub("^\\[|\\]$", "", unique(sysTrans$Category))
           if (account %in% targetAcc) {
             stop("Nieprawidłowy przelew na to samo konto")
           }
           for(acc in targetAcc) {
-            targetTrans <- sysTrans[sysTrans$Category == paste0("Przelew:", acc), ]
+            targetTrans <- sysTrans[sysTrans$Category == paste0("[", acc, "]"), ]
             targetTrans$Amount <- -targetTrans$Amount
-            targetTrans$Category <- paste0("Przelew:", account)
+            targetTrans$Category <- paste0("[", account, "]")
             private$transactions[[acc]] <- rbind(private$transactions[[acc]], targetTrans)
             private$updateAccBalance(acc)
           }
@@ -259,7 +261,7 @@ budget <- R6::R6Class(
         if (nrow(sysTrans) > 0) {
           for (r in 1:nrow(sysTrans)) {
             row <- sysTrans[r, , drop = FALSE]
-            targetAcc <- stringi::stri_split_fixed(row$Category, ":", simplify = TRUE)[, 2]
+            targetAcc <- gsub("^\\[|\\]$", "", row$Category)
             targetSysTrans <- private$transactions[[targetAcc]]
             targetRn <- rownames(targetSysTrans)
             targetTrans <- targetSysTrans[(targetSysTrans$Date == row$Date) &
@@ -267,7 +269,7 @@ budget <- R6::R6Class(
                                             (targetSysTrans$Title == row$Title) &
                                             (targetSysTrans$Payee == row$Payee) &
                                             (targetSysTrans$Amount == -row$Amount) &
-                                            (targetSysTrans$Category == paste0("Przelew:", account)), , drop = FALSE]
+                                            (targetSysTrans$Category == paste0("[", account, "]")), , drop = FALSE]
             if (nrow(targetTrans) > 0) {
               private$transactions[[targetAcc]] <- private$transactions[[targetAcc]][!(targetRn == rownames(targetTrans)[1]), ]
               private$updateAccBalance(targetAcc)
