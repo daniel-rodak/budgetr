@@ -3,11 +3,14 @@
 #' Currently only Bank and Cash type accounts are supported
 #'
 #' @param file path to file with QIF transaction data
+#' @param aggSplits logical. Convinience parameter to handle special case from
+#'   Microsoft Money. When transaction is splitted to some categories which are
+#'   later moved to the same category transactions are not aggregated
 #'
 #' @author Daniel Rodak
 #' @importFrom utils maintainer
 #' @export
-readQIF <- function(file) {
+readQIF <- function(file, aggSplits = FALSE) {
   stopifnot(file.exists(file))
   con <- file(file)
   on.exit(close(con))
@@ -20,26 +23,32 @@ readQIF <- function(file) {
   delims <- grep("^\\^", ln)
   delims <- c(0, delims)
   lnlist <- lapply(2:length(delims), function(i) ln[(delims[i - 1] + 1):(delims[i] - 1)])
-  ret <- do.call(rbind, lapply(lnlist, parseQIFLine))
+  ret <- do.call(rbind, lapply(lnlist, parseQIFLine, aggSplits))
   return(ret)
 }
 
 #' Parse single QIF line
 #' @param x character vector with QIF line between '^' delimiters
-parseQIFLine <- function(x) {
+parseQIFLine <- function(x, aggSplits = FALSE) {
   stopifnot(all(c(any(grepl("^D", x)), any(grepl("^P", x)), any(grepl("^T", x)))))
 
   date <- as.Date(substring(grep("^D", x, value = TRUE), 2))
   title <- substring(grep("^M", x, value = TRUE), 2)
   payee <- substring(grep("^P", x, value = TRUE), 2)
-  amount <- substring(grep("^T", x, value = TRUE), 2)
-  amount <- as.numeric(gsub(",", "", amount))
-  type <- ifelse(sign(amount) > 0, "Przelew Przych.", "Przelew Wych.")
-  category <- substring(grep("^L", x, value = TRUE), 2)
   title <- ifelse(length(title) == 0, "", title)
-  category <- ifelse(length(category) == 0, "", category)
+  if (any(grepl("^S", x))) {
+    category <- substring(grep("^S", x, value = TRUE), 2)
+    amount <- substring(grep("^\\$", x, value = TRUE), 2)
+    amount <- as.numeric(gsub(",", "", amount))
+  } else {
+    category <- substring(grep("^L", x, value = TRUE), 2)
+    category <- ifelse(length(category) == 0, "", category)
+    amount <- substring(grep("^T", x, value = TRUE), 2)
+    amount <- as.numeric(gsub(",", "", amount))
+  }
+  type <- ifelse(sign(amount) > 0, "Przelew Przych.", "Przelew Wych.")
 
-  return(data.frame(
+  ret <- data.frame(
     Date = date,
     Type = type,
     Title = title,
@@ -47,5 +56,21 @@ parseQIFLine <- function(x) {
     Amount = amount,
     Category = category,
     stringsAsFactors = FALSE
-  ))
+  )
+
+  if (aggSplits && nrow(ret) > 1)
+    ret <- doAggSplits(ret)
+
+  return(ret)
+}
+
+#' Group table by all fields and sum Amounts
+#' @param x data.frame
+doAggSplits <- function(x) {
+  ret <- aggregate(x[, 'Amount', drop = FALSE],
+                   by = setNames(
+                     lapply(CNSTtransactionCols[-5], function(y) x[[y]]),
+                     CNSTtransactionCols[-5]),
+                   FUN = sum)[, CNSTtransactionCols]
+  return(ret)
 }

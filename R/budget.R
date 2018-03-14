@@ -35,8 +35,8 @@
 #'   \item{\code{getAccountInitialBalances()}}{Return account initial balances vector}
 #'   \item{\code{getAccountBalances()}}{Return account balances vector}
 #'
-#'   \item{\code{addTransaction(account, transaction)}}{Add transaction(s) to account}
-#'   \item{\code{deleteTransaction(account, trIds)}}{Delete transaction(s) from account}
+#'   \item{\code{addTransaction(account, transaction, autoSys = TRUE)}}{Add transaction(s) to account}
+#'   \item{\code{deleteTransaction(account, trIds, autoSys = TRUE)}}{Delete transaction(s) from account}
 #'   \item{\code{getTransactionTable(account)}}{Get transaction table for account}
 #' }
 #' @author Daniel Rodak
@@ -225,23 +225,25 @@ budget <- R6::R6Class(
       return(private$accBalance)
     },
 
-    addTransaction = function(account, transaction) {
+    addTransaction = function(account, transaction, autoSys = TRUE) {
       private$validateAddTransaction(account, transaction)
       # handle system categories
-      sysCats <- private$categories[names(private$categories) == 'Systemowe']
-      if (length(sysCats) > 0) {
-        sysTrans <- transaction[transaction$Category %in% sysCats, , drop = FALSE]
-        if (nrow(sysTrans) > 0) {
-          targetAcc <- gsub("^\\[|\\]$", "", unique(sysTrans$Category))
-          if (account %in% targetAcc) {
-            stop("Nieprawidłowy przelew na to samo konto")
-          }
-          for(acc in targetAcc) {
-            targetTrans <- sysTrans[sysTrans$Category == paste0("[", acc, "]"), ]
-            targetTrans$Amount <- -targetTrans$Amount
-            targetTrans$Category <- paste0("[", account, "]")
-            private$transactions[[acc]] <- rbind(private$transactions[[acc]], targetTrans)
-            private$updateAccBalance(acc)
+      if (autoSys) {
+        sysCats <- private$categories[names(private$categories) == 'Systemowe']
+        if (length(sysCats) > 0) {
+          sysTrans <- transaction[transaction$Category %in% sysCats, , drop = FALSE]
+          if (nrow(sysTrans) > 0) {
+            targetAcc <- gsub("^\\[|\\]$", "", unique(sysTrans$Category))
+            if (account %in% targetAcc) {
+              stop("Nieprawidłowy przelew na to samo konto")
+            }
+            for(acc in targetAcc) {
+              targetTrans <- sysTrans[sysTrans$Category == paste0("[", acc, "]"), ]
+              targetTrans$Amount <- -targetTrans$Amount
+              targetTrans$Category <- paste0("[", account, "]")
+              private$transactions[[acc]] <- rbind(private$transactions[[acc]], targetTrans)
+              private$updateAccBalance(acc)
+            }
           }
         }
       }
@@ -250,29 +252,31 @@ budget <- R6::R6Class(
       private$updateAccBalance(account)
       return(invisible(self))
     },
-    deleteTransaction = function(account, trIds) {
+    deleteTransaction = function(account, trIds, autoSys = TRUE) {
       private$validateDeleteTransaction(account, trIds)
       rn <- rownames(private$transactions[[account]])
       # handle system categories
       # TODO: faster implementation without loop over rows
-      sysCats <- private$categories[names(private$categories) == 'Systemowe']
-      if (length(sysCats) > 0) {
-        sysTrans <- private$transactions[[account]][(rn %in% trIds) & (private$transactions[[account]]$Category %in% sysCats), , drop = FALSE]
-        if (nrow(sysTrans) > 0) {
-          for (r in 1:nrow(sysTrans)) {
-            row <- sysTrans[r, , drop = FALSE]
-            targetAcc <- gsub("^\\[|\\]$", "", row$Category)
-            targetSysTrans <- private$transactions[[targetAcc]]
-            targetRn <- rownames(targetSysTrans)
-            targetTrans <- targetSysTrans[(targetSysTrans$Date == row$Date) &
-                                            (targetSysTrans$Type == row$Type) &
-                                            (targetSysTrans$Title == row$Title) &
-                                            (targetSysTrans$Payee == row$Payee) &
-                                            (targetSysTrans$Amount == -row$Amount) &
-                                            (targetSysTrans$Category == paste0("[", account, "]")), , drop = FALSE]
-            if (nrow(targetTrans) > 0) {
-              private$transactions[[targetAcc]] <- private$transactions[[targetAcc]][!(targetRn == rownames(targetTrans)[1]), ]
-              private$updateAccBalance(targetAcc)
+      if (autoSys) {
+        sysCats <- private$categories[names(private$categories) == 'Systemowe']
+        if (length(sysCats) > 0) {
+          sysTrans <- private$transactions[[account]][(rn %in% trIds) & (private$transactions[[account]]$Category %in% sysCats), , drop = FALSE]
+          if (nrow(sysTrans) > 0) {
+            for (r in 1:nrow(sysTrans)) {
+              row <- sysTrans[r, , drop = FALSE]
+              targetAcc <- gsub("^\\[|\\]$", "", row$Category)
+              targetSysTrans <- private$transactions[[targetAcc]]
+              targetRn <- rownames(targetSysTrans)
+              targetTrans <- targetSysTrans[(targetSysTrans$Date == row$Date) &
+                                              (targetSysTrans$Type == row$Type) &
+                                              (targetSysTrans$Title == row$Title) &
+                                              (targetSysTrans$Payee == row$Payee) &
+                                              (targetSysTrans$Amount == -row$Amount) &
+                                              (targetSysTrans$Category == paste0("[", account, "]")), , drop = FALSE]
+              if (nrow(targetTrans) > 0) {
+                private$transactions[[targetAcc]] <- private$transactions[[targetAcc]][!(targetRn == rownames(targetTrans)[1]), ]
+                private$updateAccBalance(targetAcc)
+              }
             }
           }
         }

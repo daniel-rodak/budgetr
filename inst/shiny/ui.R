@@ -21,12 +21,17 @@ dashboardPage(
       fileInput("inputData", "Wybierz plik", accept = c("text/csv", "text/plain", "text/qif")),
       selectInput("fileType", "Rodzaj pliku",
                   choices = c("QIF" = "QIF", "mBank" = "mbank", "Idea Bank" = "idea")),
+      conditionalPanel(
+        condition = "input.fileType == 'QIF'",
+        checkboxInput("aggSplits", "Zagreguj transakcje")
+      ),
       actionButton("loadFile", "Importuj"),
       tags$h4("Dodaj ręcznie"),
       actionButton("manualTrans", "Dodaj"),
       tags$h4("Wgraj do konta"),
       selectInput("addDataAcc", "Wybierz konto docelowe",
                   choices = budgetFile$getAccounts()),
+      checkboxInput("autoSys", "Auto transakcje systemowe", value = TRUE),
       actionButton("addData", "Wgraj")
     ),
     conditionalPanel(condition = "input.menu1 == 'trans'",
@@ -65,6 +70,14 @@ dashboardPage(
                 textInput('newAccName', 'Nazwa konta:'),
                 numericInput('newAccInit', "Saldo początkowe:", value = 0),
                 actionButton('addNewAcc', "Dodaj konto")
+              ),
+              box(
+                width = NULL, title = "Edytuj konto", collapsible = TRUE, collapsed = TRUE,
+                selectInput('editAccName', 'Konta:',
+                            choices = budgetFile$getAccounts()),
+                textInput('newEditAccName', 'Nowa nazwa:'),
+                numericInput('newEditAccInit', "Nowe saldo poczatkowe:", value = 0),
+                actionButton('editAcc', "Edytuj konto")
               ),
               box(
                 width = NULL, title = "Usuń konto", collapsible = TRUE, collapsed = TRUE,
@@ -135,7 +148,23 @@ dashboardPage(
             title = "Edycja",
             actionButton('applyEdit', "Akceptuj"),
             actionButton('delTrans', "Usuń"),
+            checkboxInput("autoSys2", "Auto transakcje systemowe", value = TRUE),
             rHandsontableOutput('transEditTable', height = '20vh')
+          )
+        ),
+        fluidRow(
+          box(
+            width = 6, collapsible = TRUE,
+            actionButton('splitTransEx', "Podziel transakcję"),
+            actionButton('applySplitEx', "Akceptuj"),
+            tableOutput('selTransTableEx'),
+            fluidRow(
+              column(
+                12,
+                textOutput('leftAmountEx'),
+                rHandsontableOutput('splitTableEx', height = "20vh")
+              )
+            )
           )
         )
       ),

@@ -169,7 +169,7 @@ function(input, output, session) {
     req(dfTransEdit())
     rhandsontable(dfTransEdit(),
                   stretchH = "all", selectCallback = TRUE) %>%
-      hot_context_menu(allowColEdit = FALSE, allowRowEdit = FALSE) %>%
+      hot_context_menu(allowColEdit = FALSE) %>%
       hot_col(col = "Category", type = "autocomplete",
               source = budgetCats(),
               strict = TRUE)
@@ -179,7 +179,7 @@ function(input, output, session) {
     req(dfTransEdit())
     req(input$transDataAcc)
     trIds <- row.names(dfTransEdit())
-    tr <- try(budgetFile$deleteTransaction(input$transDataAcc, trIds))
+    tr <- try(budgetFile$deleteTransaction(input$transDataAcc, trIds, input$autoSys2))
     if (inherits(tr, 'try-error')) {
       showNotification(tr, type = 'error', duration = 20)
     } else if (isTruthy(input$transDataAcc)){
@@ -195,8 +195,8 @@ function(input, output, session) {
     trIds <- row.names(dfTransEdit())
     row.names(newTrans) <- trIds
     tr <- try({
-      budgetFile$deleteTransaction(input$transDataAcc, trIds)
-      budgetFile$addTransaction(input$transDataAcc, newTrans)
+      budgetFile$deleteTransaction(input$transDataAcc, trIds, input$autoSys2)
+      budgetFile$addTransaction(input$transDataAcc, newTrans, input$autoSys2)
     })
     if (inherits(tr, 'try-error')) {
       showNotification(tr, type = 'error', duration = 20)
@@ -213,7 +213,7 @@ function(input, output, session) {
     req(input$inputData)
     req(input$fileType)
     if (input$fileType == "QIF") {
-      dfrm <- try(readQIF(input$inputData$datapath))
+      dfrm <- try(readQIF(input$inputData$datapath, input$aggSplits))
     } else {
       dfrm <- try(readBank(input$inputData$datapath, input$fileType))
     }
@@ -302,7 +302,7 @@ function(input, output, session) {
     if (inherits(trans, 'try-error')) {
       showNotification(trans, type = 'error', duration = 20)
     } else {
-      tr <- try(budgetFile$addTransaction(input$addDataAcc, trans))
+      tr <- try(budgetFile$addTransaction(input$addDataAcc, trans, input$autoSys))
       if (inherits(tr, 'try-error')) {
         showNotification(tr, type = 'error', duration = 20)
       } else if (isTruthy(input$transDataAcc)){
