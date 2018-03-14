@@ -11,8 +11,8 @@ function(input, output, session) {
 # Save and load budget ----------------------------------------------------
 
 
-  # roots = c(home = '~/Desktop', wd = '.', base = '~/..')
-  roots = c(home = '~/../Desktop')
+  roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
+  # roots = c(home = '~/../Desktop')
   shinyFileChoose(input, 'openBdgt', roots = roots,
                   filetypes=c('', 'rds'), session = session)
   shinyFileSave(input, 'saveBdgt', roots = roots,
@@ -26,8 +26,8 @@ function(input, output, session) {
       updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
       updateSelectInput(session, 'newCatBudgCat', choices = budgetFile$getBudgetCategories())
       updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
-      updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()))
-      updateSelectInput(session, "delBudgCat", choices = budgetFile$getBudgetCategories())
+      updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
+      updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
       budgetCats(unname(budgetFile$getCategories()))
     }
   })
@@ -99,12 +99,12 @@ function(input, output, session) {
     }
     updateTextInput(session, 'newCatName', value = "")
     budgetCats(unname(budgetFile$getCategories()))
-    updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()))
+    updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
   })
 
   output$mvCatNameUI <- renderUI({
     selectInput('mvCatName', 'Gdzie przenieść transakcje:',
-                choices = setdiff(unname(budgetFile$getCategories()), input$delCatName))
+                choices = setdiff(unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]), input$delCatName))
   })
 
   observeEvent(input$delCat, {
@@ -124,7 +124,7 @@ function(input, output, session) {
     budgetFile$moveCategory(input$delCatName, input$mvCatName)
     budgetFile$deleteCategory(input$delCatName)
     budgetCats(unname(budgetFile$getCategories()))
-    updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()))
+    updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
     removeModal(session)
     showNotification(sprintf("Usunięto kategorię %s", input$delCatName), type = 'message')
   })
@@ -136,16 +136,45 @@ function(input, output, session) {
     }
     updateTextInput(session, 'newBudgCatName', value = "")
     updateSelectInput(session, 'newCatBudgCat', choices = budgetFile$getBudgetCategories())
-    updateSelectInput(session, "delBudgCat", choices = budgetFile$getBudgetCategories())
+    updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
+  })
+
+  observeEvent(input$delBudgCat, {
+    showModal(modalDialog(
+      title = "Usuwanie kategorii budżetowej",
+      "Upewnij się, że nie ma żadnych kategorii należących do wybranej kategorii budżetowej. Inaczej nie da się usunąć kategorii budżetowej. Kontunuować?",
+      footer = fluidRow(
+        actionButton('delBudgCatConfirm', 'Kontynuuj'),
+        modalButton('Anuluj')
+      )
+    ))
+  })
+
+  observeEvent(input$delBudgCatConfirm, {
+    req(input$delBudgCatName)
+    tr <- try(budgetFile$deleteBudgetCategory(input$delBudgCatName))
+    if (inherits(tr, 'try-error')){
+      removeModal(session)
+      showNotification(tr, type = 'error', duration = 20)
+    } else{
+      budgetCats(unname(budgetFile$getCategories()))
+      updateSelectInput(session, 'newCatBudgCat', choices = budgetFile$getBudgetCategories())
+      updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
+      removeModal(session)
+      showNotification(sprintf("Usunięto kategorię budżetową %s", input$delBudgCatName), type = 'message')
+    }
   })
 
   output$catList <- renderTable({
     timer()
     cats <- budgetFile$getCategories()
-    data.frame(
-      Kategoria = cats,
-      `Kategoria Budżetowa` = names(cats)
+    ret <- data.frame(
+      v1 = cats,
+      v2 = names(cats)
     )
+    ret <- ret[order(ret$v2), ]
+    colnames(ret) <- enc2utf8(c("Kategoria", "Kategoria budżetowa"))
+    ret
   })
 
 # Transaction data --------------------------------------------------------
@@ -160,31 +189,32 @@ function(input, output, session) {
                                             searching = FALSE
                                           ))
 
-  dfTransEdit <- eventReactive(input$transData_rows_selected, {
+  dfTransEdit <- reactiveVal()
+  observeEvent(input$transData_rows_selected, {
     req(dfTrans())
-    dfTrans()[input$transData_rows_selected, budgetr:::CNSTtransactionCols]
+    dfTransEdit(dfTrans()[input$transData_rows_selected, budgetr:::CNSTtransactionCols])
   })
 
   output$transEditTable <- renderRHandsontable({
     req(dfTransEdit())
     rhandsontable(dfTransEdit(),
                   stretchH = "all", selectCallback = TRUE) %>%
-      hot_context_menu(allowColEdit = FALSE) %>%
+      hot_context_menu(allowColEdit = FALSE, allowRowEdit = FALSE) %>%
       hot_col(col = "Category", type = "autocomplete",
               source = budgetCats(),
               strict = TRUE)
   })
 
-  observeEvent(input$delTrans, {
-    req(dfTransEdit())
-    req(input$transDataAcc)
-    trIds <- row.names(dfTransEdit())
-    tr <- try(budgetFile$deleteTransaction(input$transDataAcc, trIds, input$autoSys2))
-    if (inherits(tr, 'try-error')) {
-      showNotification(tr, type = 'error', duration = 20)
-    } else if (isTruthy(input$transDataAcc)){
-      dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
-    }
+  exTrigger <- reactiveVal(0)
+  exNewData <- callModule(splitTransaction, "exTransSplit",
+                        reactive(input$transEditTable),
+                        reactive(input$transEditTable_select),
+                        budgetCats,
+                        exTrigger)
+
+  observeEvent(input$exApplySplit, {
+    req(exNewData())
+    dfTransEdit(exNewData())
   })
 
   observeEvent(input$applyEdit, {
@@ -192,12 +222,26 @@ function(input, output, session) {
     req(input$transEditTable)
     req(input$transDataAcc)
     newTrans <- tr_to_r(input$transEditTable)
-    trIds <- row.names(dfTransEdit())
-    row.names(newTrans) <- trIds
+    trIds <- row.names(dfTrans()[input$transData_rows_selected, ])
+    if (length(trIds) == nrow(newTrans))
+      row.names(newTrans) <- trIds
     tr <- try({
       budgetFile$deleteTransaction(input$transDataAcc, trIds, input$autoSys2)
       budgetFile$addTransaction(input$transDataAcc, newTrans, input$autoSys2)
     })
+    if (inherits(tr, 'try-error')) {
+      showNotification(tr, type = 'error', duration = 20)
+    } else if (isTruthy(input$transDataAcc)){
+      dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
+      exTrigger(exTrigger() + 1)
+    }
+  })
+
+  observeEvent(input$delTrans, {
+    req(dfTransEdit())
+    req(input$transDataAcc)
+    trIds <- row.names(dfTransEdit())
+    tr <- try(budgetFile$deleteTransaction(input$transDataAcc, trIds, input$autoSys2))
     if (inherits(tr, 'try-error')) {
       showNotification(tr, type = 'error', duration = 20)
     } else if (isTruthy(input$transDataAcc)){
@@ -237,63 +281,16 @@ function(input, output, session) {
               strict = TRUE)
   })
 
-  DF_sel <- reactiveVal()
-  observeEvent(input$splitTrans, {
-    req(input$dataTable_select)
-    sel <- input$dataTable_select$select
-    if (sel$r != sel$r2) {
-      showNotification("Wybierz jedną transakcję", type = 'warning', duration = 20)
-    } else {
-      if (is.null(input$dataTable)) {
-        dfrm <- DF()[sel$r, , drop = FALSE]
-      } else {
-        dfrm <- tr_to_r(input$dataTable)[sel$r, , drop = FALSE]
-      }
-    }
-    DF_sel(dfrm)
-  })
-
-  observeEvent(input$splitTrans, {
-    output$selTransTable <- renderTable(DF_sel())
-
-    output$splitTable <- renderRHandsontable({
-      req(DF_sel())
-      dfrm <- data.frame(
-        Kategoria = c(DF_sel()$Category, ""),
-        Kwota = c(DF_sel()$Amount, 0),
-        stringsAsFactors = FALSE
-      )
-      rhandsontable(dfrm, stretchH = "all") %>%
-        hot_context_menu(allowColEdit = FALSE) %>%
-        hot_col(col = "Kategoria", type = "autocomplete",
-                source = budgetCats(), strict = TRUE)
-    })
-  })
-
-  output$leftAmount <- renderText({
-    req(input$splitTable)
-    dfSplit <- hot_to_r(input$splitTable)
-    unassigned <- DF_sel()$Amount - sum(dfSplit$Kwota)
-    sprintf("Nieprzydzielona kwota: %0.2f zł", unassigned)
-  })
+  trigger <- reactiveVal(0)
+  newData <- callModule(splitTransaction, "newTransSplit",
+                        reactive(input$dataTable),
+                        reactive(input$dataTable_select),
+                        budgetCats,
+                        trigger)
 
   observeEvent(input$applySplit, {
-    req(input$splitTable)
-    dfSplit <- hot_to_r(input$splitTable)
-    if (sum(dfSplit$Kwota) != DF_sel()$Amount) {
-      showNotification(paste("Suma podkategorii nie równa się", DF_sel()$Amount),
-                       type = 'warning', duration = 20)
-    } else {
-      splitTrans <- do.call(rbind, lapply(1:nrow(dfSplit), function(x) DF_sel()))
-      splitTrans$Amount <- dfSplit$Kwota
-      splitTrans$Category <- dfSplit$Kategoria
-      transID <- rownames(DF_sel())
-      DFhot <- tr_to_r(input$dataTable)
-      newData <- DFhot[rownames(DFhot) != transID, ]
-      newData <- rbind(newData, splitTrans)
-      newData <- newData[order(newData$Date, rownames(newData)), ]
-      DF(newData)
-    }
+    req(newData())
+    DF(newData())
   })
 
   observeEvent(input$addData, {
@@ -308,8 +305,7 @@ function(input, output, session) {
       } else if (isTruthy(input$transDataAcc)){
         dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
         DF(NULL)
-        DF_sel(NULL)
-        output$splitTable <- renderRHandsontable({NULL})
+        trigger(trigger() + 1)
       }
     }
   })

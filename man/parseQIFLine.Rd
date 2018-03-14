@@ -4,7 +4,7 @@
 \alias{parseQIFLine}
 \title{Parse single QIF line}
 \usage{
-parseQIFLine(x)
+parseQIFLine(x, aggSplits = FALSE)
 }
 \arguments{
 \item{x}{character vector with QIF line between '^' delimiters}

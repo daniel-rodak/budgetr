@@ -41,7 +41,6 @@
 #' }
 #' @author Daniel Rodak
 #' @import R6
-#' @importFrom stringi stri_split_fixed
 #' @export
 budget <- R6::R6Class(
   classname = "budget",
@@ -152,7 +151,7 @@ budget <- R6::R6Class(
     deleteBudgetCategory = function(budgetCat) {
       private$validateDeleteBudgetCategory(enc2utf8(budgetCat))
       budgetCat <- enc2utf8(budgetCat)
-      private$budgetCat <- sort(setdiff(private$budgetCats, budgetCat))
+      private$budgetCats <- sort(setdiff(private$budgetCats, budgetCat))
       return(invisible(self))
     },
     getBudgetCategories = function() {
@@ -373,6 +372,7 @@ budget <- R6::R6Class(
     },
     validateDeleteBudgetCategory = function(budgetCat) {
       is.character(budgetCat) || stop("Kategoria budżetowa nie jest wektorem tekstowym")
+      !(budgetCat %in% names(private$categories)) || stop("Przed usnięciem kategorii budżetowej przenieś wszystkie kategorie do niej należące")
     },
 
     validateAddAccount = function(account, initialBalance) {

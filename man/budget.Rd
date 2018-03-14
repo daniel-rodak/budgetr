@@ -41,8 +41,8 @@ the state in RDS file. This file is a simple copy of private members.
   \item{\code{getAccountInitialBalances()}}{Return account initial balances vector}
   \item{\code{getAccountBalances()}}{Return account balances vector}
 
-  \item{\code{addTransaction(account, transaction)}}{Add transaction(s) to account}
-  \item{\code{deleteTransaction(account, trIds)}}{Delete transaction(s) from account}
+  \item{\code{addTransaction(account, transaction, autoSys = TRUE)}}{Add transaction(s) to account}
+  \item{\code{deleteTransaction(account, trIds, autoSys = TRUE)}}{Delete transaction(s) from account}
   \item{\code{getTransactionTable(account)}}{Get transaction table for account}
 }
 }

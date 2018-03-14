@@ -112,7 +112,7 @@ dashboardPage(
               box(
                 width = NULL, title = "Usuń kategorię", collapsible = TRUE, collapsed = TRUE,
                 selectInput('delCatName', 'Nazwa kategorii do usunięcia:',
-                            choices = unname(budgetFile$getCategories())),
+                            choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"])),
                 uiOutput("mvCatNameUI"),
                 actionButton('delCat', "Usuń kategorię")
               ),
@@ -153,18 +153,9 @@ dashboardPage(
           )
         ),
         fluidRow(
-          box(
-            width = 6, collapsible = TRUE,
-            actionButton('splitTransEx', "Podziel transakcję"),
-            actionButton('applySplitEx', "Akceptuj"),
-            tableOutput('selTransTableEx'),
-            fluidRow(
-              column(
-                12,
-                textOutput('leftAmountEx'),
-                rHandsontableOutput('splitTableEx', height = "20vh")
-              )
-            )
+          column(
+            12,
+            splitTransactionUI("exTransSplit", actionButton('exApplySplit', "Akceptuj"))
           )
         )
       ),
@@ -179,18 +170,9 @@ dashboardPage(
           )
         ),
         fluidRow(
-          box(
-            width = 6, collapsible = TRUE,
-            actionButton('splitTrans', "Podziel transakcję"),
-            actionButton('applySplit', "Akceptuj"),
-            tableOutput('selTransTable'),
-            fluidRow(
-              column(
-                12,
-                textOutput('leftAmount'),
-                rHandsontableOutput('splitTable', height = "20vh")
-              )
-            )
+          column(
+            12,
+            splitTransactionUI("newTransSplit", actionButton('applySplit', "Akceptuj"))
           )
         )
       )
