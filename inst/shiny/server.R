@@ -1,6 +1,9 @@
 library(magrittr)
 
 function(input, output, session) {
+  session$onSessionEnded(function() {
+    stopApp()
+  })
   timer <- reactiveTimer(100)
   budgetName <- reactive({
     timer()
