@@ -46,7 +46,7 @@
 budget <- R6::R6Class(
   classname = "budget",
   public = list(
-    name = "Nowy Budżet",
+    name = enc2utf8("Nowy Budżet"),
     initialize = function(path = NULL) {
       if (!is.null(path)) {
         bdgt <- readRDS(path)
@@ -74,7 +74,7 @@ budget <- R6::R6Class(
       if (!is.null(path)) {
         private$path <- path
       }
-      length(private$path) == 1 || stop("Brakuje ścieżki zapisu")
+      length(private$path) == 1 || stop(enc2utf8("Brakuje ścieżki zapisu"))
       self$name <- gsub("(.rds)$", "", basename(private$path))
       saveObj <- list(
         path = private$path,
@@ -90,19 +90,22 @@ budget <- R6::R6Class(
     },
 
     addCategory = function(category, budgetCat = rep(private$budgetCats[1], length(category))) {
-      private$validateAddCategory(category, budgetCat)
+      private$validateAddCategory(enc2utf8(category), enc2utf8(budgetCat))
+      category <- enc2utf8(category)
+      budgetCat <- enc2utf8(budgetCat)
       names(category) <- budgetCat
       existingCats <- intersect(category, private$categories)
       if (length(existingCats) > 0) {
-        warning("Kategorie: ", paste(collapse = ", ", existingCats),
-                " istnieją. Pomijam ich dodawanie.")
+        warning(enc2utf8("Kategorie: "), paste(collapse = ", ", existingCats),
+                enc2utf8(" istnieją. Pomijam ich dodawanie."))
         category <- setdiff(category, existingCats)
       }
       private$categories <- sort(c(private$categories, category))
       return(invisible(self))
     },
     deleteCategory = function(category) {
-      private$validateDeleteCategory(category)
+      private$validateDeleteCategory(enc2utf8(category))
+      category <- enc2utf8(category)
       private$categories <- sort(private$categories[!(private$categories %in% category)])
       return(invisible(self))
     },
@@ -110,7 +113,9 @@ budget <- R6::R6Class(
       return(private$categories)
     },
     moveCategory = function(oldCategory, newCategory) {
-      private$validateMoveCategory(oldCategory, newCategory)
+      private$validateMoveCategory(enc2utf8(oldCategory), enc2utf8(newCategory))
+      oldCategory <- enc2utf8(oldCategory)
+      newCategory <- enc2utf8(newCategory)
       for(acc in private$accounts) {
         if (oldCategory %in% private$transactions[[acc]]$Category) {
           trn <- private$transactions[[acc]]
@@ -122,29 +127,31 @@ budget <- R6::R6Class(
     },
     updateSystemCategories = function() {
       private$validateUpdateSystemCategories()
-      currSysCats <- private$categories[names(private$categories) == "Systemowe"]
+      currSysCats <- private$categories[names(private$categories) == enc2utf8("Systemowe")]
       if (length(currSysCats) > 0) {
         self$deleteCategory(unname(currSysCats))
       }
       if (length(private$accounts) > 0) {
         sysCats <- paste0("[", private$accounts, "]")
-        self$addCategory(sysCats, rep("Systemowe", length(private$accounts)))
+        self$addCategory(sysCats, rep(enc2utf8("Systemowe"), length(private$accounts)))
       }
     },
 
     addBudgetCategory = function(budgetCat) {
-      private$validateAddBudgetCategory(budgetCat)
+      private$validateAddBudgetCategory(enc2utf8(budgetCat))
+      budgetCat <- enc2utf8(budgetCat)
       existingCats <- intersect(budgetCat, private$budgetCats)
       if (length(existingCats) > 0) {
-        warning("Kategorie budżetowe: ", paste(collapse = ", ", existingCats),
-                " już istnieją. Pomijam dodawanie.")
+        warning(enc2utf8("Kategorie budżetowe: "), paste(collapse = ", ", existingCats),
+                enc2utf8(" już istnieją. Pomijam dodawanie."))
         budgetCat <- setdiff(budgetCat, existingCats)
       }
       private$budgetCats <- sort(c(private$budgetCats, budgetCat))
       return(invisible(self))
     },
     deleteBudgetCategory = function(budgetCat) {
-      private$validateDeleteBudgetCategory(budgetCat)
+      private$validateDeleteBudgetCategory(enc2utf8(budgetCat))
+      budgetCat <- enc2utf8(budgetCat)
       private$budgetCat <- sort(setdiff(private$budgetCats, budgetCat))
       return(invisible(self))
     },
@@ -153,11 +160,12 @@ budget <- R6::R6Class(
     },
 
     addAccount = function(account, initialBalance = rep(0, length(account))) {
-      private$validateAddAccount(account, initialBalance)
+      private$validateAddAccount(enc2utf8(account), initialBalance)
+      account <- enc2utf8(account)
       existingAcc <- intersect(account, private$accounts)
       if (length(existingAcc) > 0) {
-        warning("Konta: ", paste(collapse = ", ", existingAcc),
-                " już istnieją. Pomijam dodawanie.")
+        warning(enc2utf8("Konta: "), paste(collapse = ", ", existingAcc),
+                enc2utf8(" już istnieją. Pomijam dodawanie."))
         account <- setdiff(account, existingAcc)
       }
       private$accounts <- sort(c(private$accounts, account))
@@ -174,11 +182,12 @@ budget <- R6::R6Class(
       return(invisible(self))
     },
     deleteAccount = function(account) {
-      private$validateDeleteAccount(account)
+      private$validateDeleteAccount(enc2utf8(account))
+      account <- enc2utf8(account)
       notExistingAcc <- setdiff(account, private$accounts)
       if (length(notExistingAcc) > 0) {
-        warning("Konta: ", paste(collapse = ", ", notExistingAcc),
-                " nie istnieją. Pomijam usuwanie.")
+        warning(enc2utf8("Konta: "), paste(collapse = ", ", notExistingAcc),
+                enc2utf8(" nie istnieją. Pomijam usuwanie."))
         account <- setdiff(account, notExistingAcc)
       }
       private$accounts <- sort(setdiff(private$accounts, account))
@@ -189,7 +198,9 @@ budget <- R6::R6Class(
       return(invisible(self))
     },
     renameAccount = function(account, newName) {
-      private$validateRenameAccount(account, newName)
+      private$validateRenameAccount(enc2utf8(account), enc2utf8(newName))
+      account <- enc2utf8(account)
+      newName <- enc2utf8(newName)
       private$accounts[private$accounts == account] <- newName
       private$accounts <- sort(private$accounts)
       names(private$accInit)[names(private$accInit) == account] <- newName
@@ -198,17 +209,18 @@ budget <- R6::R6Class(
       private$accBalance <- private$accBalance[private$accounts]
       names(private$transactions)[names(private$transactions) == account] <- newName
       private$transactions <- private$transactions[private$accounts]
-      self$addCategory(paste0("[", newName, "]"), "Systemowe")
+      self$addCategory(paste0("[", newName, "]"), enc2utf8("Systemowe"))
       self$moveCategory(paste0("[", account, "]"), paste0("[", newName, "]"))
       self$updateSystemCategories()
     },
     setAccountInitialBalance = function(account, initialBalance = rep(0, length(account))) {
-      private$validateAddAccount(account, initialBalance)
+      private$validateAddAccount(enc2utf8(account), initialBalance)
+      account <- enc2utf8(account)
       names(initialBalance) <- account
       notExistingAcc <- setdiff(account, private$accounts)
       if (length(notExistingAcc) > 0) {
-        warning("Konta: ", paste(collapse = ", ", notExistingAcc),
-                " nie istnieją. Pomijam zmianę salda początkowego")
+        warning(enc2utf8("Konta: "), paste(collapse = ", ", notExistingAcc),
+                enc2utf8(" nie istnieją. Pomijam zmianę salda początkowego"))
         account <- setdiff(account, notExistingAcc)
         initialBalance <- initialBalance[account]
       }
@@ -226,16 +238,17 @@ budget <- R6::R6Class(
     },
 
     addTransaction = function(account, transaction, autoSys = TRUE) {
-      private$validateAddTransaction(account, transaction)
+      private$validateAddTransaction(enc2utf8(account), transaction)
+      account <- enc2utf8(account)
       # handle system categories
       if (autoSys) {
-        sysCats <- private$categories[names(private$categories) == 'Systemowe']
+        sysCats <- private$categories[names(private$categories) == enc2utf8('Systemowe')]
         if (length(sysCats) > 0) {
           sysTrans <- transaction[transaction$Category %in% sysCats, , drop = FALSE]
           if (nrow(sysTrans) > 0) {
             targetAcc <- gsub("^\\[|\\]$", "", unique(sysTrans$Category))
             if (account %in% targetAcc) {
-              stop("Nieprawidłowy przelew na to samo konto")
+              stop(enc2utf8("Nieprawidłowy przelew na to samo konto"))
             }
             for(acc in targetAcc) {
               targetTrans <- sysTrans[sysTrans$Category == paste0("[", acc, "]"), ]
@@ -253,12 +266,13 @@ budget <- R6::R6Class(
       return(invisible(self))
     },
     deleteTransaction = function(account, trIds, autoSys = TRUE) {
-      private$validateDeleteTransaction(account, trIds)
+      private$validateDeleteTransaction(enc2utf8(account), trIds)
+      account <- enc2utf8(account)
       rn <- rownames(private$transactions[[account]])
       # handle system categories
       # TODO: faster implementation without loop over rows
       if (autoSys) {
-        sysCats <- private$categories[names(private$categories) == 'Systemowe']
+        sysCats <- private$categories[names(private$categories) == enc2utf8('Systemowe')]
         if (length(sysCats) > 0) {
           sysTrans <- private$transactions[[account]][(rn %in% trIds) & (private$transactions[[account]]$Category %in% sysCats), , drop = FALSE]
           if (nrow(sysTrans) > 0) {
@@ -287,7 +301,8 @@ budget <- R6::R6Class(
       return(invisible(self))
     },
     getTransactionTable = function(account) {
-      private$validateGetTransactionTable(account)
+      private$validateGetTransactionTable(enc2utf8(account))
+      account <- enc2utf8(account)
       trn <- private$transactions[[account]]
       trn$BudgetCategory <- vapply(trn$Category,
                                    function(x) names(private$categories[private$categories == x]),
@@ -399,3 +414,4 @@ budget <- R6::R6Class(
   ),
   lock_class = TRUE
 )
+
