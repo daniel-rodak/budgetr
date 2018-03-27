@@ -88,7 +88,7 @@ dashboardPage(
             ),
             column(width = 6,
               box(
-                width = 6, title = "Lista kont",
+                width = NULL, title = "Lista kont",
                 tableOutput('accList')
               )
             )

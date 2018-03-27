@@ -175,9 +175,10 @@ function(input, output, session) {
       v1 = cats,
       v2 = names(cats)
     )
-    ret <- ret[order(ret$v2), ]
+    ret$v3 <- c("W" = 1, "D" = 2, "S" = 3)[substring(ret$v2, 1, 1)]
+    ret <- ret[order(ret$v3, ret$v1), ]
     colnames(ret) <- enc2utf8(c("Kategoria", "Kategoria budżetowa"))
-    ret
+    ret[, 1:2]
   })
 
 # Transaction data --------------------------------------------------------

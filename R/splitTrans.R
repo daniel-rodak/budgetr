@@ -32,8 +32,8 @@ splitTransactionUI <- function(id, accBut) {
 #' @param mainTable reactive; hot table with transactions
 #' @param mainTable_select reactive; select object associated with hot table
 #' @param budgetCats reactive; categories for current budget
-#' @param trigger reactive; counter to observe idicating whether \mainTable was
-#'   added successfully
+#' @param trigger reactive; counter to observe idicating whether \code{mainTable}
+#'  was added successfully
 #'
 #' @author Daniel Rodak
 #' @export
@@ -51,7 +51,9 @@ splitTransaction <- function(input, output, session,
       if (is.null(mainTable())) {
         dfrm <- DF()[sel$r, , drop = FALSE]
       } else {
-        dfrm <- tr_to_r(mainTable())[sel$r, , drop = FALSE]
+        dfrm <- tr_to_r(mainTable(), check = FALSE)[sel$r, , drop = FALSE]
+        if (!(all(sapply(dfrm$Amount, isTruthy))))
+          dfrm <- NULL
       }
     }
     DF_sel(dfrm)
@@ -76,14 +78,14 @@ splitTransaction <- function(input, output, session,
 
   output$leftAmount <- renderText({
     req(input$splitTable)
-    dfSplit <- hot_to_r(input$splitTable)
+    dfSplit <- spl_to_r(input$splitTable)
     unassigned <- DF_sel()$Amount - sum(dfSplit$Kwota)
     sprintf("Nieprzydzielona kwota: %0.2f zł", unassigned)
   })
 
   newData <- reactive({
     req(input$splitTable)
-    dfSplit <- hot_to_r(input$splitTable)
+    dfSplit <- spl_to_r(input$splitTable)
     if (sum(dfSplit$Kwota) != DF_sel()$Amount) {
       showNotification(paste(enc2utf8("Suma podkategorii nie równa się"), DF_sel()$Amount),
                        type = 'warning', duration = 20)
@@ -93,7 +95,7 @@ splitTransaction <- function(input, output, session,
       splitTrans$Amount <- dfSplit$Kwota
       splitTrans$Category <- dfSplit$Kategoria
       transID <- rownames(DF_sel())
-      DFhot <- tr_to_r(mainTable())
+      DFhot <- tr_to_r(mainTable(), check = FALSE)
       newData <- DFhot[rownames(DFhot) != transID, ]
       newData <- rbind(newData, splitTrans)
       newData <- newData[order(newData$Date, rownames(newData)), ]

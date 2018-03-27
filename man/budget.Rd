@@ -44,6 +44,10 @@ the state in RDS file. This file is a simple copy of private members.
   \item{\code{addTransaction(account, transaction, autoSys = TRUE)}}{Add transaction(s) to account}
   \item{\code{deleteTransaction(account, trIds, autoSys = TRUE)}}{Delete transaction(s) from account}
   \item{\code{getTransactionTable(account)}}{Get transaction table for account}
+
+  \item{\code{addReport(report)}}{Add report to budget}
+  \item{\code{deleteReport(name)}}{Delete report from budget}
+  \item{\code{getReport(name)}}{Getreport}
 }
 }
 

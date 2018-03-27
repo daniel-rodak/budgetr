@@ -2,12 +2,14 @@
 % Please edit documentation in R/utils.R
 \name{tr_to_r}
 \alias{tr_to_r}
-\title{Function which transform handsontable object into data.frame}
+\title{Function which transform handsontable transaction into data.frame}
 \usage{
-tr_to_r(hot)
+tr_to_r(hot, check = TRUE)
 }
 \arguments{
 \item{hot}{hot table to be transformed}
+
+\item{check}{check if Date, Amount, Payee and Category are filled}
 }
 \value{
 data.frame

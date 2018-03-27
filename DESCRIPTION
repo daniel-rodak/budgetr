@@ -9,10 +9,11 @@ Description: This package is a shiny application which can be used to manage
     home budget. You can import transactions from bank account, store them on your
     disc in special file, browse them, generate reports and plan your budget.
 License: GPL-3
-Depends:
-    R6
 Imports:
-    shiny
+    R6,
+    dplyr,
+    shiny,
+    stringi
 Suggests: 
     testthat,
     magrittr,

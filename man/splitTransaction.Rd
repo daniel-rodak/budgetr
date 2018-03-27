@@ -27,8 +27,8 @@ splitTransaction(input, output, session, mainTable, mainTable_select,
 
 \item{budgetCats}{reactive; categories for current budget}
 
-\item{trigger}{reactive; counter to observe idicating whether \mainTable was
-added successfully}
+\item{trigger}{reactive; counter to observe idicating whether \code{mainTable}
+was added successfully}
 }
 \description{
 UI for splitting transaction module

@@ -38,9 +38,14 @@
 #'   \item{\code{addTransaction(account, transaction, autoSys = TRUE)}}{Add transaction(s) to account}
 #'   \item{\code{deleteTransaction(account, trIds, autoSys = TRUE)}}{Delete transaction(s) from account}
 #'   \item{\code{getTransactionTable(account)}}{Get transaction table for account}
+#'
+#'   \item{\code{addReport(report)}}{Add report to budget}
+#'   \item{\code{deleteReport(name)}}{Delete report from budget}
+#'   \item{\code{getReport(name)}}{Getreport}
 #' }
 #' @author Daniel Rodak
 #' @import R6
+#' @importFrom stringi stri_split_fixed
 #' @export
 budget <- R6::R6Class(
   classname = "budget",
@@ -57,6 +62,7 @@ budget <- R6::R6Class(
         private$categories <- bdgt$categories
         private$budgetCats <- bdgt$budgetCats
         private$transactions <- bdgt$transactions
+        private$reports <- bdgt$reports
         self$name <- gsub("(.rds)$", "", basename(path))
       } else {
         private$path <- character()
@@ -66,6 +72,7 @@ budget <- R6::R6Class(
         private$categories <- character()
         private$budgetCats <- CNSTdefaultBudgetCats
         private$transactions <- list()
+        private$reports <- list()
       }
       return(invisible(self))
     },
@@ -82,7 +89,8 @@ budget <- R6::R6Class(
         accBalance = private$accBalance,
         categories = private$categories,
         budgetCats = private$budgetCats,
-        transactions = private$transactions
+        transactions = private$transactions,
+        reports = private$reports
       )
       saveRDS(saveObj, file = private$path)
       return(invisible(self))
@@ -131,7 +139,7 @@ budget <- R6::R6Class(
         self$deleteCategory(unname(currSysCats))
       }
       if (length(private$accounts) > 0) {
-        sysCats <- paste0("[", private$accounts, "]")
+        sysCats <- asSys(private$accounts)
         self$addCategory(sysCats, rep(enc2utf8("Systemowe"), length(private$accounts)))
       }
     },
@@ -208,8 +216,8 @@ budget <- R6::R6Class(
       private$accBalance <- private$accBalance[private$accounts]
       names(private$transactions)[names(private$transactions) == account] <- newName
       private$transactions <- private$transactions[private$accounts]
-      self$addCategory(paste0("[", newName, "]"), enc2utf8("Systemowe"))
-      self$moveCategory(paste0("[", account, "]"), paste0("[", newName, "]"))
+      self$addCategory(asSys(newName), enc2utf8("Systemowe"))
+      self$moveCategory(asSys(account), asSys(newName))
       self$updateSystemCategories()
     },
     setAccountInitialBalance = function(account, initialBalance = rep(0, length(account))) {
@@ -250,9 +258,9 @@ budget <- R6::R6Class(
               stop(enc2utf8("Nieprawidłowy przelew na to samo konto"))
             }
             for(acc in targetAcc) {
-              targetTrans <- sysTrans[sysTrans$Category == paste0("[", acc, "]"), ]
+              targetTrans <- sysTrans[sysTrans$Category == asSys(acc), ]
               targetTrans$Amount <- -targetTrans$Amount
-              targetTrans$Category <- paste0("[", account, "]")
+              targetTrans$Category <- asSys(account)
               private$transactions[[acc]] <- rbind(private$transactions[[acc]], targetTrans)
               private$updateAccBalance(acc)
             }
@@ -285,7 +293,7 @@ budget <- R6::R6Class(
                                               (targetSysTrans$Title == row$Title) &
                                               (targetSysTrans$Payee == row$Payee) &
                                               (targetSysTrans$Amount == -row$Amount) &
-                                              (targetSysTrans$Category == paste0("[", account, "]")), , drop = FALSE]
+                                              (targetSysTrans$Category == asSys(account)), , drop = FALSE]
               if (nrow(targetTrans) > 0) {
                 private$transactions[[targetAcc]] <- private$transactions[[targetAcc]][!(targetRn == rownames(targetTrans)[1]), ]
                 private$updateAccBalance(targetAcc)
@@ -310,6 +318,63 @@ budget <- R6::R6Class(
       trn <- trn[order(trn$Date, row.names(trn)), ]
       trn$Balance <- init + cumsum(trn$Amount)
       return(trn)
+    },
+    getTransactions = function(accounts, noSys = TRUE) {
+      ret <- do.call(rbind, lapply(accounts, function(x) {
+          dfr <- self$getTransactionTable(x)
+          cbind(Account = x, dfr)
+        }))
+      if (noSys) {
+        combs <- combn(accounts, 2)
+        for (i in 1:ncol(combs)) {
+          comb <- combs[, i]
+          ret <- ret[!(ret$Account == comb[1] & ret$Category == asSys(comb[2])), ]
+          ret <- ret[!(ret$Account == comb[2] & ret$Category == asSys(comb[1])), ]
+        }
+      }
+      init <- sum(private$accInit[accounts])
+      ret <- ret[order(ret$Date, row.names(ret)), ]
+      ret$Balance <- init + cumsum(ret$Amount)
+      ret$ParCat <- stringi::stri_split_fixed(ret$Category, ":", simplify = TRUE)[, 1]
+      ret$ParBudgCat <- stringi::stri_split_fixed(ret$BudgetCategory, ":", simplify = TRUE)[, 1]
+      return(ret)
+    },
+
+    addReport = function(report) {
+      private$validateAddReport(report)
+      name <- report$name
+      if (name %in% names(private$reports)) {
+        n <- 1
+        while (sprintf("%s%d", name, n) %in% names(private$reports)) {
+          n <- n + 1
+        }
+        name <- sprintf("%s%d", name, n)
+      }
+      addRep <- list(report)
+      names(addRep) <- name
+      private$reports <- c(private$reports, addRep)
+      return(invisible(self))
+    },
+    deleteReport = function(name) {
+      private$validateDeleteReport(name)
+      reps <- setdiff(names(private$reports), name)
+      private$reports <- private$reports[reps]
+      return(invisible(self))
+    },
+    listReports = function() {
+      ret <- do.call(rbind, lapply(private$reports, function(x) x$reportMetadata()))
+      ret$Type <- switchNames(CNSTreportTypes)[ret$Type]
+      ret$Rows <- switchNames(CNSTreportRows)[ret$Rows]
+      ret$Columns <- switchNames(CNSTreportCols)[ret$Columns]
+      return(ret)
+    },
+    updateReports = function() {
+      lapply(private$reports, function(x) x$updateTransactions(self))
+      return(invisible(self))
+    },
+    getReport = function(name) {
+      private$validateGetReport(name)
+      return(private$reports[[name]])
     }
   ),
   private = list(
@@ -320,6 +385,7 @@ budget <- R6::R6Class(
     categories = character(),
     budgetCats = character(),
     transactions = list(),
+    reports = list(),
 
     updateAccBalance = function(account) {
       private$accBalance[[account]] <- private$accInit[[account]] + sum(private$transactions[[account]]$Amount)
@@ -327,7 +393,7 @@ budget <- R6::R6Class(
 
     validateBudget = function(x) {
       stopifnot(is.list(x))
-      stopifnot(all(names(x) == c("path", "accounts", "accInit", "accBalance", "categories", "budgetCats", "transactions")))
+      stopifnot(all(names(x) == c("path", "accounts", "accInit", "accBalance", "categories", "budgetCats", "transactions", "reports")))
       stopifnot(is.character(x$path))
       stopifnot(length(x$path) == 1)
       stopifnot(is.character(x$accounts))
@@ -343,6 +409,7 @@ budget <- R6::R6Class(
       stopifnot(all(vapply(x$transactions, function(y) all(colnames(y) == CNSTtransactionCols), logical(1L))))
       stopifnot(all(vapply(x$transactions, function(y) all(vapply(y, class, character(1L), USE.NAMES = FALSE) == CNSTtransactionTypes), logical(1L))))
       stopifnot(all(names(x$transactions) == x$accounts))
+      stopifnot(all(vapply(x$reports, function(x) identical(class(x), c("report", "R6")), logical(1L))))
     },
 
     validateAddCategory = function(category, budgetCat) {
@@ -410,6 +477,17 @@ budget <- R6::R6Class(
     validateGetTransactionTable = function(account) {
       is.character(account) || stop("Konto nie jest wektorem tekstowym")
       length(account) == 1 || stop("Podano więcej niż jedno konto")
+    },
+    validateAddReport = function(report) {
+      identical(class(report), c("report", "R6")) || stop("Podany obiekt nie jest klasy 'report'")
+    },
+    validateDeleteReport = function(name) {
+      name %in% names(private$reports) || stop("Raport ", name, " nie istnieje")
+      length(name) == 1 || stop("Podano więcej niż jeden raport")
+    },
+    validateGetReport = function(name) {
+      name %in% names(private$reports) || stop("Raport ", name, " nie istnieje")
+      length(name) == 1 || stop("Podano więcej niż jeden raport")
     }
   ),
   lock_class = TRUE
