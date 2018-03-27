@@ -12,6 +12,7 @@ License: GPL-3
 Imports:
     R6,
     dplyr,
+    tidyr,
     shiny,
     stringi
 Suggests: 
