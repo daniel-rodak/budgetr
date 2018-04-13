@@ -50,3 +50,10 @@ CNSTreportTypes <- enc2utf8(c(
   "Tabela" = "table",
   "Wykres słupkowy" = "bar",
   "Wykres liniowy" = "line"))
+CNSTreportDateRanges <- enc2utf8(c(
+  "Ostatnie 30 dni" = "30days",
+  "Bieżący miesiąc" = "currMonth",
+  "Poprzedni miesiąc" = "prevMonth",
+  "Ostatnie 3 miesiące" = "last3Months",
+  "Ostatnie 6 miesięcy" = "last6Months",
+  "Ostatni rok" = "lastYear"))

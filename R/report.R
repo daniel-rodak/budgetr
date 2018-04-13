@@ -30,7 +30,7 @@
 #' @import dplyr
 #' @import plotly
 #' @importFrom tidyr spread
-#' @importFrom zoo as.yearqtr
+#' @importFrom zoo as.yearmon as.yearqtr
 #' @export
 report <- R6::R6Class(
   classname = 'report',
@@ -48,7 +48,12 @@ report <- R6::R6Class(
       private$cols <- match.arg(cols, unname(CNSTreportCols))
       private$accounts <- accounts
       private$categories <- categories
-      private$dateRange <- dateRange
+      if (is.character(dateRange)) {
+        handleCharDR(dateRange)
+      } else {
+        private$dateRange <- dateRange
+        private$drType <- 'absolute'
+      }
       private$noSys <- noSys
       data <- bdg$getTransactions(accounts, noSys)
       private$transactions <- data %>%
@@ -58,6 +63,9 @@ report <- R6::R6Class(
     },
     updateTransactions = function(bdg) {
       data <- bdg$getTransactions(private$accounts, private$noSys)
+      if (private$drType != 'absolute')
+        handleCharDR(private$drType)
+
       private$transactions <- data %>%
         dplyr::filter(Category %in% private$categories,
                       Date >= private$dateRange[1],
@@ -92,14 +100,36 @@ report <- R6::R6Class(
     accounts = character(),
     categories = character(),
     dateRange = as.Date(character()),
+    drType = character(),
     noSys = logical(),
     transactions = data.frame(),
+
+    handleCharDR = function(dateRange) {
+      stopifnot(dateRange %in% CNSTreportDateRanges)
+      currDate <- Sys.Date()
+      dtStart <- switch(
+        dateRange,
+        "30days" = currDate - 30,
+        "currMonth" = as.Date(zoo::as.yearmon(currDate)),
+        "prevMonth" = as.Date(zoo::as.yearmon(currDate) - 1/12),
+        "last3Months" = as.Date(zoo::as.yearmon(currDate) - 1/6),
+        "last6Months" = as.Date(zoo::as.yearmon(currDate) - 5/12),
+        "lastYear" = as.Date(zoo::as.yearmon(currDate) - 11/12)
+      )
+      if (dateRange == "prevMonth")
+        dtEnd <- eom(dtStart)
+      else
+        dtEnd <- currDate
+
+      private$drType <- dateRange
+      private$dateRange <- c(dtStart, dtEnd)
+    },
 
     prepData = function() {
       x <- private$transactions
       x$Week <- strftime(x$Date, format = '%Y-W%W')
       x$Month <- strftime(x$Date, format = '%Y-%b') # eom(x$Date)
-      x$Quarter <- format(as.yearqtr(x$Date), format = "%Y-Q%q")
+      x$Quarter <- format(zoo::as.yearqtr(x$Date), format = "%Y-Q%q")
       x$Year <- strftime(x$Date, format = '%Y')
 
       if (private$rows == 'BalanceTD' & private$cols == 'Date') {
@@ -218,6 +248,6 @@ report <- R6::R6Class(
 # acc <- bdg$getAccounts()
 # cats <- bdg$getCategories()
 # dr <- as.Date(c("2017-10-01", "2018-04-30"))
-# rep <- report$new(bdg, 'Report', 'line', 'BalanceTD', 'Month',
-#                   acc, cats, dr, FALSE)
+# rep <- report$new(bdg, 'Report', 'bar', 'BalanceTD', 'Week',
+#                   acc, cats, 'lastYear', FALSE)
 # rep$show()
