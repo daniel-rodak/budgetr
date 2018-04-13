@@ -120,5 +120,25 @@ report <- R6::R6Class(
 # cats <- c(cats, "Systemowe" = "[Idea - ZYSKOWNE FWN]")
 # expenses <- report$new(bdg, "Wydatki", "table", "ParCat", "Month",
 #                        bdg$getAccounts(), cats,
-#                        as.Date(c("2017-10-01", "2018-03-31")), FALSE)
+#                        as.Date(c("2017-10-01", "2018-04-30")), FALSE)
 # expenses$show()
+
+# cats <- bdg$getCategories()
+# acc <- bdg$getAccounts()
+# acc <- acc[!(acc %in% c("Idea - ZOŚKA PRO FB", "Idea - ZYSKOWNE FWN"))]
+# net <- report$new(bdg, "Wartosc Netto", "table", "ParCat", "Month",
+#                   acc, cats,
+#                   as.Date(c("2017-10-01", "2018-03-31")), TRUE)
+
+# library(dplyr)
+# library(plotly)
+# bdg <- budget$new('~/../Desktop/HomeBudget/HomeBudget.rds')
+# acc <- bdg$getAccounts()
+# acc <- acc[!(acc %in% c("Idea - ZOŚKA PRO FB", "Idea - ZYSKOWNE FWN"))]
+# bdg$getTransactions(acc) -> data
+# df.plot <- data %>%
+#   mutate(Month = as.Date(budgetr:::eom(Date))) %>%
+#   filter(Date == Month) %>% group_by(Date) %>% summarise(Balance = max(Balance))
+# plot_ly(data = data, x = ~Date, y = ~Balance, type = 'scatter', mode = 'lines',
+#         hoverinfo = "text",
+#         text = ~paste(Date, "<br>", prettyNum(Balance, " "), "zł"))
