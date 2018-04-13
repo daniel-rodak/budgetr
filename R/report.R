@@ -29,7 +29,7 @@ report <- R6::R6Class(
       private$accounts <- accounts
       private$categories <- categories
       if (is.character(dateRange)) {
-        handleCharDR(dateRange)
+        private$handleCharDR(dateRange)
       } else {
         private$dateRange <- dateRange
         private$drType <- 'absolute'
@@ -44,7 +44,7 @@ report <- R6::R6Class(
     updateTransactions = function(bdg) {
       data <- bdg$getTransactions(private$accounts, private$noSys)
       if (private$drType != 'absolute')
-        handleCharDR(private$drType)
+        private$handleCharDR(private$drType)
 
       private$transactions <- data %>%
         dplyr::filter(Category %in% private$categories,
@@ -206,7 +206,6 @@ report <- R6::R6Class(
 # bdg <- budget$new('./tests/testdata/testBudget.rds')
 # acc <- bdg$getAccounts()
 # cats <- bdg$getCategories()
-# dr <- as.Date(c("2017-10-01", "2018-04-30"))
-# rep <- report$new(bdg, 'Report', 'bar', 'BalanceTD', 'Week',
-#                   acc, cats, 'lastYear', FALSE)
+# rep <- report$new(bdg, 'Report', 'line', 'BalanceTD', 'Date',
+#                   acc, cats, 'last6Months', TRUE)
 # rep$show()
