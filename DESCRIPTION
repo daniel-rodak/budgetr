@@ -14,7 +14,9 @@ Imports:
     dplyr,
     tidyr,
     shiny,
-    stringi
+    stringi,
+    plotly,
+    zoo
 Suggests: 
     testthat,
     magrittr,
