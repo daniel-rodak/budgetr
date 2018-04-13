@@ -1,23 +1,3 @@
-# library(plotly)
-# library(budgetr)
-# library(dplyr)
-# bdg <- budget$new('~/../Desktop/HomeBudget/HomeBudget.rds')
-# data <- bdg$getTransactions(bdg$getAccounts())
-#
-# df.plot <- data %>% filter(ParBudgCat == 'Wydatki', eom(Date) == '2018-01-31') %>%
-#   group_by(ParCat) %>% summarise(Amount = -sum(Amount)) %>%
-#   arrange(-Amount) %>% as.data.frame() %>%
-#   mutate(ParCat = factor(ParCat, levels = ParCat))
-#
-# plot_ly(data = df.plot, x = ~ParCat, y = ~Amount, type = 'bar')
-# plot_ly(data = df.plot, labels = ~ParCat, values = ~Amount, type = 'pie')
-#
-# df.plot <- data %>% filter(ParBudgCat != 'Systemowe')
-# plot_ly(data = df.plot, x = ~Date, y = ~Balance, type = 'scatter', mode = 'lines',
-#         hoverinfo = "text",
-#         text = ~paste(Date, "<br>", prettyNum(Balance, " "), "zł"))
-
-
 #' Reference class for storing report settings and plotting it
 #'
 #' @examples
@@ -222,27 +202,6 @@ report <- R6::R6Class(
 #                        bdg$getAccounts(), cats,
 #                        as.Date(c("2017-10-01", "2018-04-30")), FALSE)
 # expenses$show()
-
-# cats <- bdg$getCategories()
-# acc <- bdg$getAccounts()
-# acc <- acc[!(acc %in% c("Idea - ZOŚKA PRO FB", "Idea - ZYSKOWNE FWN"))]
-# net <- report$new(bdg, "Wartosc Netto", "table", "ParCat", "Month",
-#                   acc, cats,
-#                   as.Date(c("2017-10-01", "2018-03-31")), TRUE)
-
-# library(dplyr)
-# library(plotly)
-# bdg <- budget$new('~/../Desktop/HomeBudget/HomeBudget.rds')
-# acc <- bdg$getAccounts()
-# acc <- acc[!(acc %in% c("Idea - ZOŚKA PRO FB", "Idea - ZYSKOWNE FWN"))]
-# bdg$getTransactions(acc) -> data
-# df.plot <- data %>%
-#   mutate(Month = as.Date(budgetr:::eom(Date))) %>%
-#   filter(Date == Month) %>% group_by(Date) %>% summarise(Balance = max(Balance))
-# plot_ly(data = data, x = ~Date, y = ~Balance, type = 'scatter', mode = 'lines',
-#         hoverinfo = "text",
-#         text = ~paste(Date, "<br>", prettyNum(Balance, " "), "zł"))
-
 
 # bdg <- budget$new('./tests/testdata/testBudget.rds')
 # acc <- bdg$getAccounts()
