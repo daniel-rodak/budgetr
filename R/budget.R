@@ -379,6 +379,28 @@ budget <- R6::R6Class(
     getReport = function(name) {
       private$validateGetReport(name)
       return(private$reports[[name]])
+    },
+    setReportField = function(report, field, value) {
+      private$validateSetReportField(report, field, value)
+      if (field == 'name') {
+        private$reports[[report]]$name <- value
+        private$reports[[value]] <- private$reports[[report]]
+        private$reports[[report]] <- NULL
+      } else if (field == 'type') {
+        private$reports[[report]]$setType(value)
+      } else if (field == 'rows') {
+        private$reports[[report]]$setRows(value)
+      } else if (field == 'cols') {
+        private$reports[[report]]$setCols(value)
+      } else if (field == 'accounts') {
+        private$reports[[report]]$setAccounts(value, self)
+      } else if (field == 'categories') {
+        private$reports[[report]]$setCategories(value, self)
+      } else if (field == 'dateRange') {
+        private$reports[[report]]$setDateRange(value, self)
+      } else if (field == 'noSys') {
+        private$reports[[report]]$setNoSys(value, self)
+      }
     }
   ),
   private = list(
@@ -492,6 +514,13 @@ budget <- R6::R6Class(
     validateGetReport = function(name) {
       name %in% names(private$reports) || stop("Raport ", name, " nie istnieje")
       length(name) == 1 || stop("Podano więcej niż jeden raport")
+    },
+    validateSetReportField = function(report, field, value) {
+      report %in% names(private$reports) || stop("Raport ", report, " nie istnieje")
+      length(report) == 1 || stop("Podano więcej niż jeden raport")
+      field %in% c('name', 'type', 'rows', 'cols', 'accounts',
+                   'categories', 'dateRange', 'noSys') ||
+        stop("Niewłaściwe pole ", field)
     }
   ),
   lock_class = TRUE

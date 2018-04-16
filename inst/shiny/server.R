@@ -318,10 +318,10 @@ function(input, output, session) {
 
 # Reports -----------------------------------------------------------------
 
-  repShow <- reactive({
+  repShow <- reactiveVal()
+  observeEvent(input$reportChoice, {
     req(input$reportChoice)
-    repObj <- budgetFile$getReport(input$reportChoice)
-    repObj$show(objOnly = TRUE)
+    repShow(budgetFile$getReport(input$reportChoice)$show(objOnly = TRUE))
   })
   output$reportVis <- renderUI({
     if (inherits(repShow(), "data.frame")) {
@@ -372,6 +372,49 @@ function(input, output, session) {
   observeEvent(input$editReport, {
     showModal(reportSettings(FALSE, budgetFile,
                              budgetFile$getReport(input$reportChoice)$metaFiller()))
+  })
+
+  observeEvent(input$editReportConfirm, {
+    req(input$reportChoice)
+    setField <- function(field, value) {
+      budgetFile$setReportField(input$reportChoice, field, value)
+    }
+    setField('type', input$repType)
+    setField('rows', input$repRows)
+    setField('cols', input$repCols)
+    setField('accounts', input$repAccounts)
+    setField('categories', input$repCategories)
+    setField('noSys', input$repNoSys)
+    if (input$repCustomDate) {
+      setField('dateRange', input$repCustomDateRange)
+    } else {
+      setField('dateRange', input$repDateRange)
+    }
+    setField('name', input$repName)
+    repShow(budgetFile$getReport(input$repName)$show(objOnly = TRUE))
+    updateSelectInput(session, "reportChoice",
+                      choices = rownames(budgetFile$listReports()),
+                      selected = input$repName)
+    removeModal(session)
+  })
+
+  observeEvent(input$addReportConfirm, {
+    if (input$repCustomDate) {
+      dRange <- input$repCustomDateRange
+    } else {
+      dRange <- input$repDateRange
+    }
+    rep <- report$new(
+      budgetFile,
+      input$repName, input$repType, input$repRows, input$repCols,
+      input$repAccounts, input$repCategories, dRange, input$repNoSys
+    )
+    budgetFile$addReport(rep)
+    updateSelectInput(session, "reportChoice",
+                      choices = rownames(budgetFile$listReports()),
+                      selected = input$repName)
+    repShow(budgetFile$getReport(input$repName)$show(objOnly = TRUE))
+    removeModal(session)
   })
 
   observe({
