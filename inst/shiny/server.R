@@ -1,4 +1,5 @@
 library(magrittr)
+library(plotly)
 
 function(input, output, session) {
   session$onSessionEnded(function() {
@@ -14,8 +15,8 @@ function(input, output, session) {
 # Save and load budget ----------------------------------------------------
 
 
-  # roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
-  roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
+  roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
+  # roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
   shinyFileChoose(input, 'openBdgt', roots = roots,
                   filetypes=c('', 'rds'), session = session)
   shinyFileSave(input, 'saveBdgt', roots = roots,
@@ -31,6 +32,7 @@ function(input, output, session) {
       updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
       updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
       updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
+      updateSelectInput(session, "reportChoice", choices = rownames(budgetFile$listReports()))
       budgetCats(unname(budgetFile$getCategories()))
     }
   })
@@ -312,5 +314,67 @@ function(input, output, session) {
         trigger(trigger() + 1)
       }
     }
+  })
+
+# Reports -----------------------------------------------------------------
+
+  repShow <- reactive({
+    req(input$reportChoice)
+    repObj <- budgetFile$getReport(input$reportChoice)
+    repObj$show(objOnly = TRUE)
+  })
+  output$reportVis <- renderUI({
+    if (inherits(repShow(), "data.frame")) {
+      DT::DTOutput("reportTable")
+    } else if (inherits(repShow(), "plotly")) {
+     plotly::plotlyOutput("reportChart")
+    } else {
+      NULL
+    }
+  })
+
+  output$reportChart <- plotly::renderPlotly({
+    if (inherits(repShow(), "plotly")) {
+      repShow()
+    } else {
+      NULL
+    }
+  })
+
+  output$reportTable <- DT::renderDT({
+    if (inherits(repShow(), "data.frame")) {
+      repShow()
+    } else {
+      NULL
+    }
+  })
+
+  observeEvent(input$deleteReport, {
+    showModal(modalDialog(
+      title = "Usuwanie raportu",
+      sprintf("Usuwanie raportu '%s'. Kontunuować?", input$reportChoice),
+      footer = fluidRow(
+        actionButton('delRepConfirm', 'Kontynuuj'),
+        modalButton('Anuluj')
+      )
+    ))
+  })
+  observeEvent(input$delRepConfirm, {
+    budgetFile$deleteReport(input$reportChoice)
+    updateSelectInput(session, "reportChoice", choices = rownames(budgetFile$listReports()))
+    removeModal(session)
+  })
+
+  observeEvent(input$addReport, {
+    showModal(reportSettings(TRUE, budgetFile))
+  })
+
+  observeEvent(input$editReport, {
+    showModal(reportSettings(FALSE, budgetFile,
+                             budgetFile$getReport(input$reportChoice)$metaFiller()))
+  })
+
+  observe({
+    shinyjs::toggleState(id = "editReport", condition = input$reportChoice != "")
   })
 }

@@ -363,9 +363,13 @@ budget <- R6::R6Class(
     },
     listReports = function() {
       ret <- do.call(rbind, lapply(private$reports, function(x) x$reportMetadata()))
-      ret$Type <- switchNames(CNSTreportTypes)[ret$Type]
-      ret$Rows <- switchNames(CNSTreportRows)[ret$Rows]
-      ret$Columns <- switchNames(CNSTreportCols)[ret$Columns]
+      if (is.data.frame(ret) && nrow(ret) > 0) {
+        ret$Type <- switchNames(CNSTreportTypes)[ret$Type]
+        ret$Rows <- switchNames(CNSTreportRows)[ret$Rows]
+        ret$Columns <- switchNames(CNSTreportCols)[ret$Columns]
+      } else {
+        ret <- NULL
+      }
       return(ret)
     },
     updateReports = function() {

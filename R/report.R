@@ -10,7 +10,7 @@
 #' @import dplyr
 #' @import plotly
 #' @importFrom tidyr spread
-#' @importFrom zoo as.yearmon as.yearqtr
+#' @importFrom zoo as.yearmon as.yearqtr as.Date
 #' @export
 report <- R6::R6Class(
   classname = 'report',
@@ -51,14 +51,14 @@ report <- R6::R6Class(
                       Date >= private$dateRange[1],
                       Date <= private$dateRange[2])
     },
-    show = function() {
+    show = function(objOnly = FALSE) {
       showFun <- switch(
         private$type,
         "table" = private$showTable,
         "line" = private$showLine,
         "bar" = private$showBar,
         private$showTable)
-      showFun()
+      showFun(objOnly)
     },
     reportMetadata = function() {
       ret <- data.frame(
@@ -71,6 +71,50 @@ report <- R6::R6Class(
         stringsAsFactors = FALSE
       )
       return(ret)
+    },
+    metaFiller = function() {
+      list(
+        name = self$name,
+        type = private$type,
+        rows = private$rows,
+        cols = private$cols,
+        accounts = private$accounts,
+        categories = private$categories,
+        dateRange = private$dateRange,
+        drType = private$drType,
+        noSys = private$noSys
+      )
+    },
+
+    setType = function(value = c("table", "bar", "line")) {
+      private$type <- match.arg(value)
+    },
+    setRows = function(value){
+      private$rows <- match.arg(value, unname(CNSTreportRows))
+    },
+    setCols = function(value){
+      private$cols <- match.arg(value, unname(CNSTreportCols))
+    },
+    setAccounts = function(value, bdg) {
+      private$accounts <- value
+      self$updateTransactions(bdg)
+    },
+    setCategories = function(value, bdg) {
+      private$categories <- value
+      self$updateTransactions(bdg)
+    },
+    setDateRange = function(value, bdg) {
+      if (is.character(value)) {
+        private$handleCharDR(value)
+      } else {
+        private$dateRange <- value
+        private$drType <- 'absolute'
+      }
+      self$updateTransactions(bdg)
+    },
+    setNoSys = function(value, bdg) {
+      private$noSys <- value
+      self$updateTransactions(bdg)
     }
   ),
   private = list(
@@ -90,11 +134,11 @@ report <- R6::R6Class(
       dtStart <- switch(
         dateRange,
         "30days" = currDate - 30,
-        "currMonth" = as.Date(zoo::as.yearmon(currDate)),
-        "prevMonth" = as.Date(zoo::as.yearmon(currDate) - 1/12),
-        "last3Months" = as.Date(zoo::as.yearmon(currDate) - 1/6),
-        "last6Months" = as.Date(zoo::as.yearmon(currDate) - 5/12),
-        "lastYear" = as.Date(zoo::as.yearmon(currDate) - 11/12)
+        "currMonth" = zoo::as.Date(zoo::as.yearmon(currDate)),
+        "prevMonth" = zoo::as.Date(zoo::as.yearmon(currDate) - 1/12),
+        "last3Months" = zoo::as.Date(zoo::as.yearmon(currDate) - 1/6),
+        "last6Months" = zoo::as.Date(zoo::as.yearmon(currDate) - 5/12),
+        "lastYear" = zoo::as.Date(zoo::as.yearmon(currDate) - 11/12)
       )
       if (dateRange == "prevMonth")
         dtEnd <- eom(dtStart)
@@ -108,7 +152,7 @@ report <- R6::R6Class(
     prepData = function() {
       x <- private$transactions
       x$Week <- strftime(x$Date, format = '%Y-W%W')
-      x$Month <- strftime(x$Date, format = '%Y-%b') # eom(x$Date)
+      x$Month <- strftime(x$Date, format = '%Y-%b')
       x$Quarter <- format(zoo::as.yearqtr(x$Date), format = "%Y-Q%q")
       x$Year <- strftime(x$Date, format = '%Y')
 
@@ -128,9 +172,9 @@ report <- R6::R6Class(
         colnames(x) <- c(private$rows, private$cols, "Amount")
         x <- tidyr::spread(x, key = private$cols, value = "Amount", fill = 0)
         row.names(x) <- x[, 1]
-        x <- x[, -1]
+        x <- x[, -1, drop = FALSE]
         x$Total <- rowSums(x)
-        x <- x[order(-abs(x$Total)), ]
+        x <- x[order(-abs(x$Total)), , drop = FALSE]
         x <- rbind(x, colSums(x))
         row.names(x) <- c(row.names(x)[1:(nrow(x)-1)], "Total")
       } else {
@@ -140,13 +184,14 @@ report <- R6::R6Class(
       return(x)
     },
 
-    showTable = function() {
+    showTable = function(objOnly = FALSE) {
       x <- private$prepData()
-      print(x)
+      if (!(objOnly))
+        print(x)
       invisible(x)
     },
 
-    showLine = function() {
+    showLine = function(objOnly = FALSE) {
       x <- private$prepData()
       xvar <- colnames(x)[1]
       yvar <- colnames(x)[2]
@@ -165,11 +210,12 @@ report <- R6::R6Class(
             ticksuffix = ' zł'
           )
         )
-      print(p)
+      if (!(objOnly))
+        print(p)
       invisible(p)
     },
 
-    showBar = function() {
+    showBar = function(objOnly = FALSE) {
       x <- private$prepData()
       xvar <- colnames(x)[1]
       yvar <- colnames(x)[2]
@@ -188,24 +234,25 @@ report <- R6::R6Class(
             ticksuffix = ' zł'
           )
         )
-      print(p)
+      if (!(objOnly))
+        print(p)
       invisible(p)
     }
   )
 )
 
 # bdg <- budget$new('~/../Desktop/HomeBudget/HomeBudget.rds')
-# cats <- bdg$getCategories()
-# cats <- cats[grepl("Wydatki:", names(cats))]
-# cats <- c(cats, "Systemowe" = "[Idea - ZYSKOWNE FWN]")
-# expenses <- report$new(bdg, "Wydatki", "table", "ParCat", "Month",
-#                        bdg$getAccounts(), cats,
-#                        as.Date(c("2017-10-01", "2018-04-30")), FALSE)
-# expenses$show()
-
 # bdg <- budget$new('./tests/testdata/testBudget.rds')
+# bdg$deleteReport('Wydatki')
+# bdg$deleteReport('Report')
 # acc <- bdg$getAccounts()
 # cats <- bdg$getCategories()
 # rep <- report$new(bdg, 'Report', 'line', 'BalanceTD', 'Date',
 #                   acc, cats, 'last6Months', TRUE)
-# rep$show()
+# cats <- cats[grepl("Wydatki:", names(cats))]
+# expenses <- report$new(bdg, "Wydatki", "table", "ParCat", "Month",
+#                        acc, cats,
+#                        as.Date(c("2017-10-01", "2018-04-30")), FALSE)
+# bdg$addReport(expenses)
+# bdg$addReport(rep)
+# bdg$save()

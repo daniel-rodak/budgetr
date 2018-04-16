@@ -82,3 +82,11 @@ switchNames <- function(x) {
 asSys <- function(account) {
   paste0("[", account, "]")
 }
+
+namedVecToList <- function(x) {
+  sapply(unique(names(x)), function(y) unname(x[names(x) == y]), simplify = FALSE)
+}
+
+ifNull <- function(x, rep) {
+  ifelse(is.null(x), rep, x)
+}

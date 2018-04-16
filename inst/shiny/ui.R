@@ -14,7 +14,8 @@ dashboardPage(
       menuItem("Otwórz/Zapisz", tabName = "os", icon = icon("floppy-disk", lib = "glyphicon")),
       menuItem("Ustawienia budżetu", tabName = "settings", icon = icon("cog", lib = "glyphicon")),
       menuItem("Transakcje", tabName = 'trans', icon = icon("list-alt", lib = "glyphicon")),
-      menuItem("Dodaj transakcje", tabName = "import", icon = icon("download"))
+      menuItem("Dodaj transakcje", tabName = "import", icon = icon("download")),
+      menuItem("Raport", tabName = "report", icon = icon("chart-line"))
     ),
     conditionalPanel(condition = "input.menu1 == 'import'",
       tags$h4("Importuj"),
@@ -37,10 +38,29 @@ dashboardPage(
     conditionalPanel(condition = "input.menu1 == 'trans'",
       selectInput("transDataAcc", "Wybierz konto docelowe",
                   choices = budgetFile$getAccounts())
+    ),
+    conditionalPanel(condition = "input.menu1 == 'report'",
+      selectInput("reportChoice", "Wybierz raport",
+                  choices = rownames(budgetFile$listReports())),
+      actionButton("editReport", "Modyfikuj"),
+      actionButton("deleteReport", "Usuń"),
+      actionButton("addReport", "Dodaj nowy")
     )
   ),
 
   dashboardBody(
+    tags$head(
+      # tags$script(defer = NA,
+      #             src = "https://use.fontawesome.com/releases/v5.0.10/js/all.js",
+      #             integrity="sha384-slN8GvtUJGnv6ca26v8EzVaR9DC58QEwsIk9q1QXdCU8Yu8ck/tL/5szYlBbqmS+",
+      #             crossorigin="anonymous")
+      tags$link(
+        rel = 'stylesheet',
+        type = 'text/css',
+        href = 'myStyle.css'
+      )
+    ),
+    shinyjs::useShinyjs(),
     tabItems(
       tabItem(
         tabName = 'os',
@@ -173,6 +193,16 @@ dashboardPage(
           column(
             12,
             splitTransactionUI("newTransSplit", actionButton('applySplit', "Akceptuj"))
+          )
+        )
+      ),
+
+      tabItem(
+        tabName = 'report',
+        fluidRow(
+          box(
+            width = 12,
+            uiOutput('reportVis')
           )
         )
       )

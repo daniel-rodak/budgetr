@@ -21,6 +21,7 @@ Suggests:
     testthat,
     magrittr,
     shinydashboard,
+    shinyjs,
     DT,
     rhandsontable,
     shinyFiles
