@@ -29,7 +29,8 @@ reportSettings <- function(newReport = TRUE, bdg, metaFiller = list()) {
         selectInput("repAccounts", "Konta", choices = bdg$getAccounts(),
                     multiple = TRUE, selected = metaFiller$accounts),
         selectInput("repCategories", "Kategorie",
-                    choices = namedVecToList(bdg$getCategories()),
+                    choices = c(list(Wszystko = "Wszystko"),
+                                namedVecToList(bdg$getCategories())),
                     multiple = TRUE, selected = metaFiller$categories),
         checkboxInput("repNoSys", "Pomiń przelewy wewnętrzne",
                       value = ifNull(metaFiller$noSys, TRUE))

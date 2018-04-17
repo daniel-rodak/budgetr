@@ -318,6 +318,7 @@ function(input, output, session) {
 
 # Reports -----------------------------------------------------------------
 
+  ### Show report
   repShow <- reactiveVal()
   observeEvent(input$reportChoice, {
     req(input$reportChoice)
@@ -349,6 +350,7 @@ function(input, output, session) {
     }
   })
 
+  ### Delete report
   observeEvent(input$deleteReport, {
     showModal(modalDialog(
       title = "Usuwanie raportu",
@@ -365,15 +367,11 @@ function(input, output, session) {
     removeModal(session)
   })
 
-  observeEvent(input$addReport, {
-    showModal(reportSettings(TRUE, budgetFile))
-  })
-
+  ### Edit report
   observeEvent(input$editReport, {
     showModal(reportSettings(FALSE, budgetFile,
                              budgetFile$getReport(input$reportChoice)$metaFiller()))
   })
-
   observeEvent(input$editReportConfirm, {
     req(input$reportChoice)
     setField <- function(field, value) {
@@ -398,6 +396,10 @@ function(input, output, session) {
     removeModal(session)
   })
 
+  ### Add report
+  observeEvent(input$addReport, {
+    showModal(reportSettings(TRUE, budgetFile))
+  })
   observeEvent(input$addReportConfirm, {
     if (input$repCustomDate) {
       dRange <- input$repCustomDateRange
@@ -417,6 +419,33 @@ function(input, output, session) {
     removeModal(session)
   })
 
+  ### Button reactivity handlers
+  observe({
+    if ('Wszystko' %in% input$repCategories) {
+      updateSelectInput(session, 'repCategories', selected = budgetCats())
+    }
+  })
+  observeEvent(input$repNoSys, {
+    if (input$repNoSys) {
+      selCache <- input$repCategories
+      chcs <- c(list(Wszystko = "Wszystko"),
+                budgetr:::namedVecToList(budgetFile$getCategories()))
+      chcs$Systemowe <- NULL
+      cats <- budgetFile$getCategories()
+      cats <- cats[names(cats) == 'Systemowe']
+      selCache <- setdiff(selCache, cats)
+      updateSelectInput(session, 'repCategories',
+                        choices = chcs,
+                        selected = selCache)
+    } else {
+      selCache <- input$repCategories
+      chcs <- c(list(Wszystko = "Wszystko"),
+                budgetr:::namedVecToList(budgetFile$getCategories()))
+      updateSelectInput(session, 'repCategories',
+                        choices = chcs,
+                        selected = selCache)
+    }
+  })
   observe({
     shinyjs::toggleState(id = "editReport", condition = input$reportChoice != "")
   })
