@@ -2,6 +2,7 @@
 
 export(budget)
 export(launch)
+export(mockBudget)
 export(readBank)
 export(readQIF)
 export(report)
