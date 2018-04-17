@@ -152,7 +152,7 @@ report <- R6::R6Class(
     prepData = function() {
       x <- private$transactions
       x$Week <- strftime(x$Date, format = '%Y-W%W')
-      x$Month <- strftime(x$Date, format = '%Y-%b')
+      x$Month <- strftime(x$Date, format = '%Y-%m')
       x$Quarter <- format(zoo::as.yearqtr(x$Date), format = "%Y-Q%q")
       x$Year <- strftime(x$Date, format = '%Y')
 
@@ -173,6 +173,7 @@ report <- R6::R6Class(
         x <- tidyr::spread(x, key = private$cols, value = "Amount", fill = 0)
         row.names(x) <- x[, 1]
         x <- x[, -1, drop = FALSE]
+        x <- x[, sort(colnames(x))]
         x$Total <- rowSums(x)
         x <- x[order(-abs(x$Total)), , drop = FALSE]
         x <- rbind(x, colSums(x))
