@@ -30,7 +30,7 @@ mockBudget <- function() {
   trROR$Category <- ifelse(trROR$Amount > 0,
                            cats[7],
                            sample(cats[c(1,2,5,6,8,9,10,11)], 90-n_pos, TRUE, prob = c(2,2,4,7,2,2,2,3)))
-  trSalary <- data.frame(
+  suppressWarnings(trSalary <- data.frame(
     Date = zoo::as.Date(unique(zoo::as.yearmon(trROR$Date))),
     Type = "Income",
     Title = "Salary",
@@ -38,7 +38,7 @@ mockBudget <- function() {
     Amount = 1500,
     Category = cats[4],
     stringsAsFactors = FALSE
-  )
+  ))
   trROR <- rbind(trROR, trSalary)
   trROR <- trROR[order(trROR$Date, rownames(trROR)), ]
 
