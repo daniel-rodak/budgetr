@@ -161,7 +161,7 @@ report <- R6::R6Class(
       } else if (private$rows == 'BalanceTD' & private$cols %in% c('Week', 'Month', 'Quarter', 'Year')) {
         x <- x %>%
           dplyr::group_by(!!as.name(private$cols)) %>%
-          dplyr::mutate(rn = rev(dplyr::row_number(.data$Balance))) %>%
+          dplyr::mutate(rn = rev(dplyr::row_number(.data$Year))) %>%
           dplyr::ungroup() %>%
           dplyr::filter(rn == 1) %>%
           dplyr::select(dplyr::one_of(c(private$cols, 'Balance'))) %>%

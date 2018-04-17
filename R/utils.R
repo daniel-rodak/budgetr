@@ -88,5 +88,10 @@ namedVecToList <- function(x) {
 }
 
 ifNull <- function(x, rep) {
-  ifelse(sapply(x, is.null), rep, x)
+  if (is.null(x)) {
+    retval <- rep
+  } else {
+    retval <- ifelse(sapply(x, is.null), rep, x)
+  }
+  return(retval)
 }

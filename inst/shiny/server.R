@@ -90,10 +90,11 @@ function(input, output, session) {
 
   output$accList <- renderTable({
     timer()
-    data.frame(
+    dfr <- data.frame(
       Konto = budgetFile$getAccounts(),
       Saldo = budgetFile$getAccountBalances()
     )
+    rbind(dfr, data.frame(Konto = "Total", Saldo = sum(dfr$Saldo)))
   })
 
   budgetCats <- reactiveVal(unname(budgetFile$getCategories()))
@@ -396,7 +397,8 @@ function(input, output, session) {
     } else {
       setField('dateRange', input$repDateRange)
     }
-    setField('name', input$repName)
+    if (input$repName != input$reportChoice)
+      setField('name', input$repName)
     repShow(budgetFile$getReport(input$repName)$show(objOnly = TRUE))
     updateSelectInput(session, "reportChoice",
                       choices = rownames(budgetFile$listReports()),
