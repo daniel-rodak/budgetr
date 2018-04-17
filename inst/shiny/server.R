@@ -15,8 +15,8 @@ function(input, output, session) {
 # Save and load budget ----------------------------------------------------
 
 
-  roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
-  # roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
+  # roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
+  roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
   shinyFileChoose(input, 'openBdgt', roots = roots,
                   filetypes=c('', 'rds'), session = session)
   shinyFileSave(input, 'saveBdgt', roots = roots,
@@ -32,7 +32,8 @@ function(input, output, session) {
       updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
       updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
       updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
-      updateSelectInput(session, "reportChoice", choices = rownames(budgetFile$listReports()))
+      updateSelectInput(session, "reportChoice",
+                        choices = budgetr:::ifNull(rownames(budgetFile$listReports()), ""))
       budgetCats(unname(budgetFile$getCategories()))
     }
   })
@@ -192,7 +193,9 @@ function(input, output, session) {
   })
   output$transData <- DT::renderDataTable(dfTrans(), filter = 'top',
                                           options = list(
-                                            searching = FALSE
+                                            searching = FALSE,
+                                            language = CNSTDTPLLanguage,
+                                            pagingType = "full_numbers"
                                           ))
 
   dfTransEdit <- reactiveVal()
@@ -348,7 +351,12 @@ function(input, output, session) {
     } else {
       NULL
     }
-  })
+  }, filter = "none", selection = "none",
+  options = list(
+    searching = FALSE,
+    language = CNSTDTPLLanguage,
+    paging = FALSE
+  ))
 
   ### Delete report
   observeEvent(input$deleteReport, {
