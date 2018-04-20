@@ -95,3 +95,25 @@ ifNull <- function(x, rep) {
   }
   return(retval)
 }
+
+parseCharDR = function(dateRange) {
+  stopifnot(dateRange %in% CNSTreportDateRanges)
+  currDate <- Sys.Date()
+  dtStart <- switch(
+    dateRange,
+    "30days" = currDate - 30,
+    "currMonth" = zoo::as.Date(zoo::as.yearmon(currDate)),
+    "prevMonth" = zoo::as.Date(zoo::as.yearmon(currDate) - 1/12),
+    "last3Months" = zoo::as.Date(zoo::as.yearmon(currDate) - 1/6),
+    "last6Months" = zoo::as.Date(zoo::as.yearmon(currDate) - 5/12),
+    "lastYear" = zoo::as.Date(zoo::as.yearmon(currDate) - 11/12)
+  )
+  if (dateRange == "prevMonth")
+    dtEnd <- zoo::as.Date(zoo::as.yearmon(currDate)) - 1
+  else
+    dtEnd <- currDate
+
+  drType <- dateRange
+  dateRange <- c(dtStart, dtEnd)
+  return(list(drType = drType, dateRange = dateRange))
+}

@@ -129,24 +129,10 @@ report <- R6::R6Class(
     transactions = data.frame(),
 
     handleCharDR = function(dateRange) {
-      stopifnot(dateRange %in% CNSTreportDateRanges)
-      currDate <- Sys.Date()
-      dtStart <- switch(
-        dateRange,
-        "30days" = currDate - 30,
-        "currMonth" = zoo::as.Date(zoo::as.yearmon(currDate)),
-        "prevMonth" = zoo::as.Date(zoo::as.yearmon(currDate) - 1/12),
-        "last3Months" = zoo::as.Date(zoo::as.yearmon(currDate) - 1/6),
-        "last6Months" = zoo::as.Date(zoo::as.yearmon(currDate) - 5/12),
-        "lastYear" = zoo::as.Date(zoo::as.yearmon(currDate) - 11/12)
-      )
-      if (dateRange == "prevMonth")
-        dtEnd <- eom(dtStart)
-      else
-        dtEnd <- currDate
+      ret <- parseCharDR(dateRange)
 
-      private$drType <- dateRange
-      private$dateRange <- c(dtStart, dtEnd)
+      private$drType <- ret$drType
+      private$dateRange <- ret$dateRange
     },
 
     prepData = function() {
@@ -170,10 +156,10 @@ report <- R6::R6Class(
       } else if (private$rows != 'BalanceTD') {
         x <- aggregate(x$Amount, by = list(x[, private$rows], x[, private$cols]), FUN = sum)
         colnames(x) <- c(private$rows, private$cols, "Amount")
-        x <- tidyr::spread(x, key = private$cols, value = "Amount", fill = 0)
+        x <- tidyr::spread(x, key = private$cols, value = "Amount", fill = 0, drop = FALSE)
         row.names(x) <- x[, 1]
         x <- x[, -1, drop = FALSE]
-        x <- x[, sort(colnames(x))]
+        x <- x[, sort(colnames(x)), drop = FALSE]
         x$Total <- rowSums(x)
         x <- x[order(-abs(x$Total)), , drop = FALSE]
         x <- rbind(x, colSums(x))

@@ -342,16 +342,8 @@ budget <- R6::R6Class(
 
     addReport = function(report) {
       private$validateAddReport(report)
-      name <- report$name
-      if (name %in% names(private$reports)) {
-        n <- 1
-        while (sprintf("%s%d", name, n) %in% names(private$reports)) {
-          n <- n + 1
-        }
-        name <- sprintf("%s%d", name, n)
-      }
-      addRep <- list(report)
-      names(addRep) <- name
+      addRep <- list(report$metaFiller())
+      names(addRep) <- addRep[[1]]$name
       private$reports <- c(private$reports, addRep)
       return(invisible(self))
     },
@@ -362,7 +354,17 @@ budget <- R6::R6Class(
       return(invisible(self))
     },
     listReports = function() {
-      ret <- do.call(rbind, lapply(private$reports, function(x) x$reportMetadata()))
+      ret <- do.call(rbind, lapply(private$reports, function(x) {
+        data.frame(
+          Name = x$name,
+          Type = x$type,
+          From = x$dateRange[1],
+          To = x$dateRange[2],
+          Rows = x$rows,
+          Columns = x$cols,
+          stringsAsFactors = FALSE
+        )
+      }))
       if (is.data.frame(ret) && nrow(ret) > 0) {
         ret$Type <- switchNames(CNSTreportTypes)[ret$Type]
         ret$Rows <- switchNames(CNSTreportRows)[ret$Rows]
@@ -373,12 +375,15 @@ budget <- R6::R6Class(
       return(ret)
     },
     updateReports = function() {
-      lapply(private$reports, function(x) x$updateTransactions(self))
-      return(invisible(self))
+      # lapply(private$reports, function(x) x$updateTransactions(self))
+      # return(invisible(self))
     },
     getReport = function(name) {
       private$validateGetReport(name)
-      return(private$reports[[name]])
+      mf <- private$reports[[name]]
+      rep <- report$new(self, mf$name, mf$type, mf$rows, mf$cols,
+                        mf$accounts, mf$categories, mf$dateRange, mf$noSys)
+      return(rep)
     },
     setReportField = function(report, field, value) {
       private$validateSetReportField(report, field, value)
@@ -387,19 +392,26 @@ budget <- R6::R6Class(
         private$reports[[value]] <- private$reports[[report]]
         private$reports[[report]] <- NULL
       } else if (field == 'type') {
-        private$reports[[report]]$setType(value)
+        private$reports[[report]]$type <- value
       } else if (field == 'rows') {
-        private$reports[[report]]$setRows(value)
+        private$reports[[report]]$rows <- value
       } else if (field == 'cols') {
-        private$reports[[report]]$setCols(value)
+        private$reports[[report]]$cols <- value
       } else if (field == 'accounts') {
-        private$reports[[report]]$setAccounts(value, self)
+        private$reports[[report]]$accounts <- value
       } else if (field == 'categories') {
-        private$reports[[report]]$setCategories(value, self)
+        private$reports[[report]]$categories <- value
       } else if (field == 'dateRange') {
-        private$reports[[report]]$setDateRange(value, self)
+        if (is.character(value)) {
+          ret <- parseCharDR(value)
+          private$reports[[report]]$dateRange <- ret$dateRange
+          private$reports[[report]]$drType <- ret$drType
+        } else {
+          private$reports[[report]]$dateRange <- ret$dateRange
+          private$reports[[report]]$drType <- 'absolute'
+        }
       } else if (field == 'noSys') {
-        private$reports[[report]]$setNoSys(value, self)
+        private$reports[[report]]$noSys <- value
       }
     }
   ),
@@ -506,6 +518,10 @@ budget <- R6::R6Class(
     },
     validateAddReport = function(report) {
       identical(class(report), c("report", "R6")) || stop("Podany obiekt nie jest klasy 'report'")
+      name <- report$name
+      if (name %in% names(private$reports)) {
+        stop("Raport ", name, " istnieje")
+      }
     },
     validateDeleteReport = function(name) {
       name %in% names(private$reports) || stop("Raport ", name, " nie istnieje")
