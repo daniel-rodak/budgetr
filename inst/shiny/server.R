@@ -15,8 +15,8 @@ function(input, output, session) {
 # Save and load budget ----------------------------------------------------
 
 
-  # roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
-  roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
+  roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
+  # roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
   shinyFileChoose(input, 'openBdgt', roots = roots,
                   filetypes=c('', 'rds'), session = session)
   shinyFileSave(input, 'saveBdgt', roots = roots,
@@ -51,6 +51,24 @@ function(input, output, session) {
       showNotification(tr, type = 'error', duration = 20)
     }
   })
+
+  observeEvent(
+    ignoreNULL = TRUE,
+    eventExpr = {
+      input$saveDir
+    },
+    handlerExpr = {
+      if (input$saveDir > 0) {
+        # condition prevents handler execution on initial app launch
+
+        # launch the directory selection dialog with initial path read from the widget
+        path = choose.dir(default = readDirectoryInput(session, 'saveDir'))
+
+        # update the widget value
+        updateDirectoryInput(session, 'saveDir', value = path)
+      }
+    }
+  )
 
 # Budget settings ---------------------------------------------------------
 
@@ -196,8 +214,11 @@ function(input, output, session) {
                                           options = list(
                                             searching = FALSE,
                                             language = CNSTDTPLLanguage,
-                                            pagingType = "full_numbers"
-                                          ))
+                                            info = FALSE,
+                                            paging = FALSE,
+                                            scrollY = '50vh',
+                                            scrollCollapse= TRUE
+                                          ), colnames = CNSTtransactionColsPL)
 
   dfTransEdit <- reactiveVal()
   observeEvent(input$transData_rows_selected, {

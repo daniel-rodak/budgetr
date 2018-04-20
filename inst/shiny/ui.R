@@ -74,7 +74,8 @@ dashboardPage(
             width = 6, title = "Zapisz budżet",
             shinySaveButton('saveBdgt', "Wybierz lokalizację",
                             "Wybierz lokalizację do zapisu",
-                            filetype = list(RDS = 'rds'))
+                            filetype = list(RDS = 'rds')),
+            directoryInput('saveDir', label = 'Wybierz folder do zapisu')
 
           )
         )

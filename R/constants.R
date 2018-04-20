@@ -71,3 +71,7 @@ CNSTDTPLLanguage <- list(
     'previous' = "Poprzednia"
   )
 )
+
+#' @export
+CNSTtransactionColsPL <- c("Data", "Typ", "Tytuł", "Podmiot", "Kwota",
+                           "Kategoria", "Kategoria budżetowa", "Saldo")
