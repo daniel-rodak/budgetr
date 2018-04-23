@@ -407,7 +407,7 @@ budget <- R6::R6Class(
           private$reports[[report]]$dateRange <- ret$dateRange
           private$reports[[report]]$drType <- ret$drType
         } else {
-          private$reports[[report]]$dateRange <- ret$dateRange
+          private$reports[[report]]$dateRange <- value
           private$reports[[report]]$drType <- 'absolute'
         }
       } else if (field == 'noSys') {

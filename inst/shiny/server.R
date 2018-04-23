@@ -15,8 +15,8 @@ function(input, output, session) {
 # Save and load budget ----------------------------------------------------
 
 
-  roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
-  # roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
+  # roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
+  roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
   shinyFileChoose(input, 'openBdgt', roots = roots,
                   filetypes=c('', 'rds'), session = session)
   shinyFileSave(input, 'saveBdgt', roots = roots,

@@ -65,6 +65,12 @@ if (Sys.info()['sysname'] == 'Darwin') {
 
     return(path)
   }
+} else if (Sys.info()['sysname'] == 'Windows') {
+  choose.dir = function(default = NA, caption = NA) {
+    path <- file.choose()
+    system2(command = "nircmd", args = c("win", "activate", "title", '"Select file"'))
+    return(path)
+  }
 }
 
 #' Directory Selection Control
@@ -212,6 +218,12 @@ if (Sys.info()['sysname'] == 'Darwin') {
       path = NA
     }
 
+    return(path)
+  }
+} else if (Sys.info()['sysname'] == 'Windows') {
+  choose.file = function(default = NA, caption = NA) {
+    path <- file.choose()
+    system2(command = "nircmd", args = c("win", "activate", "title", '"Select file"'))
     return(path)
   }
 }
