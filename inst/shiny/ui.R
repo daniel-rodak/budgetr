@@ -67,15 +67,10 @@ dashboardPage(
         fluidRow(
           box(
             width = 6, title = "Otwórz budżet",
-            # shinyFilesButton('openBdgt', "Wybierz plik", "Wybierz plik budżetu",
-            #                 multiple = FALSE),
             directoryInput('loadFile', label = '')
           ),
           box(
             width = 6, title = "Zapisz budżet",
-            # shinySaveButton('saveBdgt', "Wybierz lokalizację",
-            #                 "Wybierz lokalizację do zapisu",
-            #                 filetype = list(RDS = 'rds')),
             directoryInput('saveDir', label = '')
           )
         )

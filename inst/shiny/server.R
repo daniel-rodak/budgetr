@@ -14,44 +14,6 @@ function(input, output, session) {
 
 # Save and load budget ----------------------------------------------------
 
-
-  # roots = c(home = '~/Desktop', wd = '.', tests = '~/Documents/repos/budgetr/tests/testdata')
-  roots = c(tests = '~/../source/repos/budgetr/tests/testdata', home = '~/../Desktop')
-  shinyFileChoose(input, 'openBdgt', roots = roots,
-                  filetypes=c('', 'rds'), session = session)
-  shinyFileSave(input, 'saveBdgt', roots = roots,
-                filetypes=c('', 'rds'), session = session)
-
-  observeEvent(input$openBdgt, {
-    fi <- parseFilePaths(roots, input$openBdgt)
-    if (nrow(fi) == 1) {
-      budgetFile <<- budget$new(as.character(fi$datapath))
-      updateSelectInput(session, "addDataAcc", choices = budgetFile$getAccounts())
-      updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
-      updateSelectInput(session, 'newCatBudgCat', choices = budgetFile$getBudgetCategories())
-      updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
-      updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
-      updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
-      updateSelectInput(session, "reportChoice",
-                        choices = budgetr:::ifNull(rownames(budgetFile$listReports()), ""))
-      budgetCats(unname(budgetFile$getCategories()))
-    }
-  })
-
-  observeEvent(input$saveBdgt, {
-    fi <- parseSavePath(roots, input$saveBdgt)
-    if (nrow(fi) == 1) {
-      budgetFile$save(as.character(fi$datapath))
-    }
-  })
-
-  observeEvent(input$saveBut, {
-    tr <- try(budgetFile$save())
-    if (inherits(tr, 'try-error')) {
-      showNotification(tr, type = 'error', duration = 20)
-    }
-  })
-
   observeEvent(
     ignoreNULL = TRUE,
     eventExpr = {
@@ -62,16 +24,18 @@ function(input, output, session) {
         # condition prevents handler execution on initial app launch
 
         # launch the directory selection dialog with initial path read from the widget
-        path <- choose.dir(default = readDirectoryInput(session, 'saveDir'),
-                          caption = sprintf("Zapisz budżet %s", budgetName()))
+        path <- try(choose.dir(default = readDirectoryInput(session, 'saveDir'),
+                               caption = sprintf("Zapisz budżet %s", budgetName())))
 
-        # update the widget value
-        updateDirectoryInput(session, 'saveDir', value = path)
+        if (!inherits(path, 'try-error')) {
+          # update the widget value
+          updateDirectoryInput(session, 'saveDir', value = path)
 
-        # save budget
-        tr <- try(budgetFile$save(path))
-        if (inherits(tr, 'try-error')) {
-          showNotification(tr, type = 'error', duration = 20)
+          # save budget
+          tr <- try(budgetFile$save(path))
+          if (inherits(tr, 'try-error')) {
+            showNotification(tr, type = 'error', duration = 20)
+          }
         }
       }
     }
@@ -87,26 +51,28 @@ function(input, output, session) {
         # condition prevents handler execution on initial app launch
 
         # launch the directory selection dialog with initial path read from the widget
-        path <- choose.file(default = readDirectFileInput(session, 'loadFile'),
-                           caption = "Otwórz budżet")
+        path <- try(choose.file(default = readDirectFileInput(session, 'loadFile'),
+                                caption = "Otwórz budżet"))
 
-        # update the widget value
-        updateDirectFileInput(session, 'loadFile', value = path)
+        if (!inherits(path, 'try-error')) {
+          # update the widget value
+          updateDirectFileInput(session, 'loadFile', value = path)
 
-        # load file
-        tr <- try(budgetFile <<- budget$new(path))
-        if (inherits(tr, 'try-error')) {
-          showNotification(tr, type = 'error', duration = 20)
-        } else {
-          updateSelectInput(session, "addDataAcc", choices = budgetFile$getAccounts())
-          updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
-          updateSelectInput(session, 'newCatBudgCat', choices = budgetFile$getBudgetCategories())
-          updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
-          updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
-          updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
-          updateSelectInput(session, "reportChoice",
-                            choices = budgetr:::ifNull(rownames(budgetFile$listReports()), ""))
-          budgetCats(unname(budgetFile$getCategories()))
+          # load file
+          tr <- try(budgetFile <<- budget$new(path))
+          if (inherits(tr, 'try-error')) {
+            showNotification(tr, type = 'error', duration = 20)
+          } else {
+            updateSelectInput(session, "addDataAcc", choices = budgetFile$getAccounts())
+            updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
+            updateSelectInput(session, 'newCatBudgCat', choices = budgetFile$getBudgetCategories())
+            updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
+            updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
+            updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
+            updateSelectInput(session, "reportChoice",
+                              choices = budgetr:::ifNull(rownames(budgetFile$listReports()), ""))
+            budgetCats(unname(budgetFile$getCategories()))
+          }
         }
       }
     }
