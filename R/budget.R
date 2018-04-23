@@ -447,7 +447,6 @@ budget <- R6::R6Class(
       stopifnot(all(vapply(x$transactions, function(y) all(colnames(y) == CNSTtransactionCols), logical(1L))))
       stopifnot(all(vapply(x$transactions, function(y) all(vapply(y, class, character(1L), USE.NAMES = FALSE) == CNSTtransactionTypes), logical(1L))))
       stopifnot(all(names(x$transactions) == x$accounts))
-      stopifnot(all(vapply(x$reports, function(x) identical(class(x), c("report", "R6")), logical(1L))))
     },
 
     validateAddCategory = function(category, budgetCat) {

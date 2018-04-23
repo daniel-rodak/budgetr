@@ -153,7 +153,15 @@ report <- R6::R6Class(
           dplyr::select(dplyr::one_of(c(private$cols, 'Balance'))) %>%
           as.data.frame()
         x[, 1] <- factor(x[, 1], levels = x[, 1])
-      } else if (private$rows != 'BalanceTD') {
+      } else if (private$rows == 'Amount') {
+        x <- aggregate(x$Amount, by = list(x[, private$cols]), FUN = sum)
+        colnames(x) <- c(private$cols, "Amount")
+        x <- x[order(-abs(x$Amount)), , drop = FALSE]
+        total <- data.frame(V1 = "Total", V2 = sum(x$Amount))
+        colnames(total) <- colnames(x)
+        x <- rbind(x, total)
+        x[, 1] <- factor(x[, 1], levels = x[, 1])
+      } else if (!(private$rows %in% c('BalanceTD', 'Amount'))) {
         x <- aggregate(x$Amount, by = list(x[, private$rows], x[, private$cols]), FUN = sum)
         colnames(x) <- c(private$rows, private$cols, "Amount")
         x <- tidyr::spread(x, key = private$cols, value = "Amount", fill = 0, drop = FALSE)

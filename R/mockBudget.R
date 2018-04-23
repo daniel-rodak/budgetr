@@ -59,13 +59,16 @@ mockBudget <- function() {
   bdg$addTransaction(account = 'Gotowka', transaction = trCash, autoSys = TRUE)
 
   netWorth <- report$new(bdg, 'Wartosc netto',
-                         'bar', 'BalanceTD', 'Month',
+                         'line', 'BalanceTD', 'Month',
                          bdg$getAccounts(), bdg$getCategories(), 'lastYear')
   expenses <- report$new(bdg, 'Wydatki', 'table', 'ParCat', 'Month',
                          c("ROR", "Gotowka"), cats[c(2,5,6,8,9,10,11)],
                          'last3Months', noSys = FALSE)
+  catTotal <- report$new(bdg, 'Cat total', 'bar', 'Amount', 'Category',
+                         bdg$getAccounts(), bdg$getCategories(), 'prevMonth')
   bdg$addReport(netWorth)
   bdg$addReport(expenses)
+  bdg$addReport(catTotal)
 
   return(bdg)
 }

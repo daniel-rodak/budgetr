@@ -14,8 +14,8 @@ dashboardPage(
       menuItem("Otwórz/Zapisz", tabName = "os", icon = icon("floppy-disk", lib = "glyphicon")),
       menuItem("Ustawienia budżetu", tabName = "settings", icon = icon("cog", lib = "glyphicon")),
       menuItem("Transakcje", tabName = 'trans', icon = icon("list-alt", lib = "glyphicon")),
-      menuItem("Dodaj transakcje", tabName = "import", icon = icon("download")),
-      menuItem("Raport", tabName = "report", icon = icon("chart-line"))
+      menuItem("Dodaj transakcje", tabName = "import", icon = icon("save", lib = "glyphicon")),
+      menuItem("Raport", tabName = "report", icon = icon("stats", lib = "glyphicon"))
     ),
     conditionalPanel(condition = "input.menu1 == 'import'",
       tags$h4("Importuj"),
@@ -50,10 +50,10 @@ dashboardPage(
 
   dashboardBody(
     tags$head(
-      tags$script(defer = NA,
-                  src = "https://use.fontawesome.com/releases/v5.0.10/js/all.js",
-                  integrity="sha384-slN8GvtUJGnv6ca26v8EzVaR9DC58QEwsIk9q1QXdCU8Yu8ck/tL/5szYlBbqmS+",
-                  crossorigin="anonymous"),
+      # tags$script(defer = NA,
+      #             src = "https://use.fontawesome.com/releases/v5.0.10/js/all.js",
+      #             integrity="sha384-slN8GvtUJGnv6ca26v8EzVaR9DC58QEwsIk9q1QXdCU8Yu8ck/tL/5szYlBbqmS+",
+      #             crossorigin="anonymous"),
       tags$link(
         rel = 'stylesheet',
         type = 'text/css',
@@ -67,16 +67,16 @@ dashboardPage(
         fluidRow(
           box(
             width = 6, title = "Otwórz budżet",
-            shinyFilesButton('openBdgt', "Wybierz plik", "Wybierz plik budżetu",
-                            multiple = FALSE)
+            # shinyFilesButton('openBdgt', "Wybierz plik", "Wybierz plik budżetu",
+            #                 multiple = FALSE),
+            directoryInput('loadFile', label = '')
           ),
           box(
             width = 6, title = "Zapisz budżet",
-            shinySaveButton('saveBdgt', "Wybierz lokalizację",
-                            "Wybierz lokalizację do zapisu",
-                            filetype = list(RDS = 'rds')),
-            directoryInput('saveDir', label = 'Wybierz folder do zapisu')
-
+            # shinySaveButton('saveBdgt', "Wybierz lokalizację",
+            #                 "Wybierz lokalizację do zapisu",
+            #                 filetype = list(RDS = 'rds')),
+            directoryInput('saveDir', label = '')
           )
         )
       ),

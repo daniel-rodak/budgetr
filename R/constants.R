@@ -28,6 +28,7 @@ CNSTdefaultBudgetCats <- enc2utf8(c(
   "Oszczędności:Emerytura", "Systemowe"))
 CNSTreportRows <- enc2utf8(c(
   "Saldo" = "BalanceTD",
+  "Kwota" = "Amount",
   "Nadkategorie budżetowe" = "ParBudgCat",
   "Kategorie budżetowe" = "BudgetCategory",
   "Nadkategorie" = "ParCat",

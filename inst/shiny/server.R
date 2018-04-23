@@ -62,10 +62,52 @@ function(input, output, session) {
         # condition prevents handler execution on initial app launch
 
         # launch the directory selection dialog with initial path read from the widget
-        path = choose.dir(default = readDirectoryInput(session, 'saveDir'))
+        path <- choose.dir(default = readDirectoryInput(session, 'saveDir'),
+                          caption = sprintf("Zapisz budżet %s", budgetName()))
 
         # update the widget value
         updateDirectoryInput(session, 'saveDir', value = path)
+
+        # save budget
+        tr <- try(budgetFile$save(path))
+        if (inherits(tr, 'try-error')) {
+          showNotification(tr, type = 'error', duration = 20)
+        }
+      }
+    }
+  )
+
+  observeEvent(
+    ignoreNULL = TRUE,
+    eventExpr = {
+      input$loadFile
+    },
+    handlerExpr = {
+      if (input$loadFile > 0) {
+        # condition prevents handler execution on initial app launch
+
+        # launch the directory selection dialog with initial path read from the widget
+        path <- choose.file(default = readDirectFileInput(session, 'loadFile'),
+                           caption = "Otwórz budżet")
+
+        # update the widget value
+        updateDirectFileInput(session, 'loadFile', value = path)
+
+        # load file
+        tr <- try(budgetFile <<- budget$new(path))
+        if (inherits(tr, 'try-error')) {
+          showNotification(tr, type = 'error', duration = 20)
+        } else {
+          updateSelectInput(session, "addDataAcc", choices = budgetFile$getAccounts())
+          updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
+          updateSelectInput(session, 'newCatBudgCat', choices = budgetFile$getBudgetCategories())
+          updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
+          updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
+          updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
+          updateSelectInput(session, "reportChoice",
+                            choices = budgetr:::ifNull(rownames(budgetFile$listReports()), ""))
+          budgetCats(unname(budgetFile$getCategories()))
+        }
       }
     }
   )
@@ -286,6 +328,7 @@ function(input, output, session) {
 
   observeEvent(input$loadFile, {
     req(input$inputData)
+    str(input$inputData)
     req(input$fileType)
     if (input$fileType == "QIF") {
       dfrm <- try(readQIF(input$inputData$datapath, input$aggSplits))
