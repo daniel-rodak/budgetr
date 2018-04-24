@@ -232,6 +232,7 @@ budget <- R6::R6Class(
         initialBalance <- initialBalance[account]
       }
       private$accInit[account] <- initialBalance
+      lapply(account, private$updateAccBalance)
       return(invisible(self))
     },
     getAccounts = function() {

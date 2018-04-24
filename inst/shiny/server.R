@@ -56,6 +56,7 @@ function(input, output, session) {
             updateSelectInput(session, "addDataAcc", choices = budgetFile$getAccounts())
             updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
             updateSelectInput(session, 'newCatBudgCat', choices = budgetFile$getBudgetCategories())
+            updateSelectInput(session, "editAccName", choices = budgetFile$getAccounts())
             updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
             updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
             updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
@@ -81,6 +82,39 @@ function(input, output, session) {
     updateSelectInput(session, "addDataAcc", choices = budgetFile$getAccounts())
     updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
     updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
+    updateSelectInput(session, "editAccName", choices = budgetFile$getAccounts())
+  })
+
+  observeEvent(input$editAccName, {
+    req(input$editAccName)
+    updateNumericInput(
+      session, 'newEditAccInit',
+      value = budgetFile$getAccountInitialBalances()[[input$editAccName]]
+    )
+    updateTextInput(session, 'newEditAccName', value = input$editAccName)
+  })
+
+  observeEvent(input$editAcc, {
+    # Edit initial balance
+    if (input$newEditAccInit != budgetFile$getAccountInitialBalances()[[input$editAccName]]) {
+      tr <- try(budgetFile$setAccountInitialBalance(input$editAccName, input$newEditAccInit))
+      if (inherits(tr, 'try-error')) {
+        showNotification(tr, type = 'error', duration = 20)
+      }
+    }
+    # Rename account
+    if (input$newEditAccName != input$editAccName) {
+      tr <- try(budgetFile$renameAccount(input$editAccName, input$newEditAccName))
+      if (inherits(tr, 'try-error')) {
+        showNotification(tr, type = 'error', duration = 20)
+      }
+    }
+    updateSelectInput(session, "addDataAcc", choices = budgetFile$getAccounts())
+    updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
+    updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
+    updateSelectInput(session, "editAccName", choices = budgetFile$getAccounts(), selected = input$newEditAccName)
+    updateTextInput(session, 'newEditAccName', value = input$newEditAccName)
+    updateNumericInput(session, 'newEditAccInit', value = budgetFile$getAccountInitialBalances()[[input$newEditAccName]])
   })
 
   observeEvent(input$delAcc, {
@@ -100,6 +134,7 @@ function(input, output, session) {
     updateSelectInput(session, "addDataAcc", choices = budgetFile$getAccounts())
     updateSelectInput(session, "transDataAcc", choices = budgetFile$getAccounts())
     updateSelectInput(session, "delAccName", choices = budgetFile$getAccounts())
+    updateSelectInput(session, "editAccName", choices = budgetFile$getAccounts())
     removeModal(session)
     showNotification(sprintf("Usunięto konto %s", input$delAccName), type = 'message')
   })
