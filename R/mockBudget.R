@@ -59,7 +59,7 @@ mockBudget <- function() {
   bdg$addTransaction(account = 'Gotowka', transaction = trCash, autoSys = TRUE)
 
   netWorth <- report$new(bdg, 'Wartosc netto',
-                         'line', 'BalanceTD', 'Month',
+                         'line', 'Balance', 'Month',
                          bdg$getAccounts(), bdg$getCategories(), 'lastYear')
   expenses <- report$new(bdg, 'Wydatki', 'table', 'ParCat', 'Month',
                          c("ROR", "Gotowka"), cats[c(2,5,6,8,9,10,11)],

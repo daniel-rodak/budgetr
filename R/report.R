@@ -142,9 +142,9 @@ report <- R6::R6Class(
       x$Quarter <- format(zoo::as.yearqtr(x$Date), format = "%Y-Q%q")
       x$Year <- strftime(x$Date, format = '%Y')
 
-      if (private$rows == 'BalanceTD' & private$cols == 'Date') {
+      if (private$rows == 'Balance' & private$cols == 'Date') {
         x <- x[, c('Date', 'Balance')]
-      } else if (private$rows == 'BalanceTD' & private$cols %in% c('Week', 'Month', 'Quarter', 'Year')) {
+      } else if (private$rows == 'Balance' & private$cols %in% c('Week', 'Month', 'Quarter', 'Year')) {
         x <- x %>%
           dplyr::group_by(!!as.name(private$cols)) %>%
           dplyr::mutate(rn = rev(dplyr::row_number(.data$Year))) %>%
@@ -161,7 +161,7 @@ report <- R6::R6Class(
         colnames(total) <- colnames(x)
         x <- rbind(x, total)
         x[, 1] <- factor(x[, 1], levels = x[, 1])
-      } else if (!(private$rows %in% c('BalanceTD', 'Amount'))) {
+      } else if (!(private$rows %in% c('Balance', 'Amount'))) {
         x <- aggregate(x$Amount, by = list(x[, private$rows], x[, private$cols]), FUN = sum)
         colnames(x) <- c(private$rows, private$cols, "Amount")
         x <- tidyr::spread(x, key = private$cols, value = "Amount", fill = 0, drop = FALSE)
@@ -189,7 +189,9 @@ report <- R6::R6Class(
     showLine = function(objOnly = FALSE) {
       x <- private$prepData()
       xvar <- colnames(x)[1]
+      xlab <- switchNames(CNSTreportCols)[xvar]
       yvar <- colnames(x)[2]
+      ylab <- switchNames(CNSTreportRows)[yvar]
       hovertext <- paste(x[, xvar], '<br>',
                          prettyNum(x[, yvar], ' '), 'zł')
       p <- plotly::plot_ly(
@@ -202,7 +204,11 @@ report <- R6::R6Class(
         layout(
           yaxis = list(
             exponentformat = 'SI',
-            ticksuffix = ' zł'
+            ticksuffix = ' zł',
+            title = ylab
+          ),
+          xaxis = list(
+            title = xlab
           )
         )
       if (!(objOnly))
@@ -213,7 +219,9 @@ report <- R6::R6Class(
     showBar = function(objOnly = FALSE) {
       x <- private$prepData()
       xvar <- colnames(x)[1]
+      xlab <- switchNames(CNSTreportCols)[xvar]
       yvar <- colnames(x)[2]
+      ylab <- switchNames(CNSTreportRows)[yvar]
       hovertext <- paste(x[, xvar], '<br>',
                          prettyNum(x[, yvar], ' '), 'zł')
       p <- plotly::plot_ly(
@@ -226,7 +234,11 @@ report <- R6::R6Class(
         layout(
           yaxis = list(
             exponentformat = 'SI',
-            ticksuffix = ' zł'
+            ticksuffix = ' zł',
+            title = ylab
+          ),
+          xaxis = list(
+            title = xlab
           )
         )
       if (!(objOnly))
@@ -242,7 +254,7 @@ report <- R6::R6Class(
 # bdg$deleteReport('Report')
 # acc <- bdg$getAccounts()
 # cats <- bdg$getCategories()
-# rep <- report$new(bdg, 'Report', 'line', 'BalanceTD', 'Date',
+# rep <- report$new(bdg, 'Report', 'line', 'Balance', 'Date',
 #                   acc, cats, 'last6Months', TRUE)
 # cats <- cats[grepl("Wydatki:", names(cats))]
 # expenses <- report$new(bdg, "Wydatki", "table", "ParCat", "Month",
