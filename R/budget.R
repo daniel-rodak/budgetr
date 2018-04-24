@@ -382,8 +382,13 @@ budget <- R6::R6Class(
     getReport = function(name) {
       private$validateGetReport(name)
       mf <- private$reports[[name]]
+      if (mf$drType == 'absolute') {
+        dateRange <- mf$dateRange
+      } else {
+        dateRange <- mf$drType
+      }
       rep <- report$new(self, mf$name, mf$type, mf$rows, mf$cols,
-                        mf$accounts, mf$categories, mf$dateRange, mf$noSys)
+                        mf$accounts, mf$categories, dateRange, mf$noSys)
       return(rep)
     },
     setReportField = function(report, field, value) {
