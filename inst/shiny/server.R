@@ -226,10 +226,10 @@ function(input, output, session) {
 
   output$transEditTable <- renderRHandsontable({
     req(dfTransEdit())
-    rhandsontable(dfTransEdit(),
-                  stretchH = "all", selectCallback = TRUE) %>%
+    rhandsontable(dfTransEdit(), stretchH = "all", selectCallback = TRUE,
+                  colHeaders = CNSTtransactionColsPL[1:6]) %>%
       hot_context_menu(allowColEdit = FALSE, allowRowEdit = FALSE) %>%
-      hot_col(col = "Category", type = "autocomplete",
+      hot_col(col = "Kategoria", type = "autocomplete",
               source = budgetCats(),
               strict = TRUE)
   })
@@ -304,9 +304,10 @@ function(input, output, session) {
 
   output$dataTable <- renderRHandsontable({
     req(DF())
-    rhandsontable(DF(), stretchH = "all", selectCallback = TRUE) %>%
+    rhandsontable(DF(), stretchH = "all", selectCallback = TRUE,
+                  colHeaders = CNSTtransactionColsPL[1:6]) %>%
       hot_context_menu(allowColEdit = FALSE) %>%
-      hot_col(col = "Category", type = "autocomplete",
+      hot_col(col = "Kategoria", type = "autocomplete",
               source = budgetCats(),
               strict = TRUE)
   })
