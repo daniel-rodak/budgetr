@@ -17,21 +17,16 @@ function(input, output, session) {
   observeEvent(
     ignoreNULL = TRUE,
     eventExpr = {
-      input$saveDir
+      input$saveFile
     },
     handlerExpr = {
-      if (input$saveDir > 0) {
-        # condition prevents handler execution on initial app launch
+      if (input$saveFile > 0) {
+        path <- choose.filename(default = readFilenameSelectInput(session, 'saveFile'),
+                                caption = sprintf("Zapisz budżet %s", budgetName()))
 
-        # launch the directory selection dialog with initial path read from the widget
-        path <- try(choose.dir(default = readDirectoryInput(session, 'saveDir'),
-                               caption = sprintf("Zapisz budżet %s", budgetName())))
+        if (!is.na(path)) {
+          updateFilenameSelectInput(session, 'saveFile', value = path)
 
-        if (!inherits(path, 'try-error')) {
-          # update the widget value
-          updateDirectoryInput(session, 'saveDir', value = path)
-
-          # save budget
           tr <- try(budgetFile$save(path))
           if (inherits(tr, 'try-error')) {
             showNotification(tr, type = 'error', duration = 20)
@@ -48,17 +43,12 @@ function(input, output, session) {
     },
     handlerExpr = {
       if (input$loadFile > 0) {
-        # condition prevents handler execution on initial app launch
+        path <- choose.file(default = readFileSelectInput(session, 'loadFile'),
+                            caption = "Otwórz budżet")
 
-        # launch the directory selection dialog with initial path read from the widget
-        path <- try(choose.file(default = readDirectFileInput(session, 'loadFile'),
-                                caption = "Otwórz budżet"))
+        if (!is.na(path)) {
+          updateFileSelectInput(session, 'loadFile', value = path)
 
-        if (!inherits(path, 'try-error')) {
-          # update the widget value
-          updateDirectFileInput(session, 'loadFile', value = path)
-
-          # load file
           tr <- try(budgetFile <<- budget$new(path))
           if (inherits(tr, 'try-error')) {
             showNotification(tr, type = 'error', duration = 20)
@@ -70,7 +60,7 @@ function(input, output, session) {
             updateSelectInput(session, "delCatName", choices = unname(budgetFile$getCategories()[names(budgetFile$getCategories()) != "Systemowe"]))
             updateSelectInput(session, "delBudgCatName", choices = budgetFile$getBudgetCategories())
             updateSelectInput(session, "reportChoice",
-                              choices = budgetr:::ifNull(rownames(budgetFile$listReports()), ""))
+                              choices = ifNull(rownames(budgetFile$listReports()), ""))
             budgetCats(unname(budgetFile$getCategories()))
           }
         }
@@ -231,7 +221,7 @@ function(input, output, session) {
   dfTransEdit <- reactiveVal()
   observeEvent(input$transData_rows_selected, {
     req(dfTrans())
-    dfTransEdit(dfTrans()[input$transData_rows_selected, budgetr:::CNSTtransactionCols])
+    dfTransEdit(dfTrans()[input$transData_rows_selected, CNSTtransactionCols])
   })
 
   output$transEditTable <- renderRHandsontable({
@@ -309,7 +299,7 @@ function(input, output, session) {
   })
 
   observeEvent(input$manualTrans, {
-    DF(budgetr:::CNSTtrOneRowTemplate)
+    DF(CNSTtrOneRowTemplate)
   })
 
   output$dataTable <- renderRHandsontable({
@@ -469,7 +459,7 @@ function(input, output, session) {
     if (input$repNoSys) {
       selCache <- input$repCategories
       chcs <- c(list(Wszystko = "Wszystko"),
-                budgetr:::namedVecToList(budgetFile$getCategories()))
+                namedVecToList(budgetFile$getCategories()))
       chcs$Systemowe <- NULL
       cats <- budgetFile$getCategories()
       cats <- cats[names(cats) == 'Systemowe']
@@ -480,7 +470,7 @@ function(input, output, session) {
     } else {
       selCache <- input$repCategories
       chcs <- c(list(Wszystko = "Wszystko"),
-                budgetr:::namedVecToList(budgetFile$getCategories()))
+                namedVecToList(budgetFile$getCategories()))
       updateSelectInput(session, 'repCategories',
                         choices = chcs,
                         selected = selCache)

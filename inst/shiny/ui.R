@@ -67,11 +67,11 @@ dashboardPage(
         fluidRow(
           box(
             width = 6, title = "Otwórz budżet",
-            directoryInput('loadFile', label = '')
+            fileSelectInput('loadFile', label = '')
           ),
           box(
             width = 6, title = "Zapisz budżet",
-            directoryInput('saveDir', label = '')
+            filenameSelectInput('saveFile', label = '')
           )
         )
       ),

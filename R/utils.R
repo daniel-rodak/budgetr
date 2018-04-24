@@ -55,6 +55,30 @@ spl_to_r <- function(hot) {
   return(data)
 }
 
+#' Transform named vector to list
+#' @param x named vector
+#' @return list with names equal to vector names
+#' @author Daniel Rodak
+#' @export
+namedVecToList <- function(x) {
+  sapply(unique(names(x)), function(y) unname(x[names(x) == y]), simplify = FALSE)
+}
+
+#' Replace NULLs with \code{rep}
+#' @param x object
+#' @param rep replacement
+#' @return object with replaced NULLs
+#' @author Daniel Rodak
+#' @export
+ifNull <- function(x, rep) {
+  if (is.null(x)) {
+    retval <- rep
+  } else {
+    retval <- ifelse(sapply(x, is.null), rep, x)
+  }
+  return(retval)
+}
+
 #' Function which gives end of month for date
 #' @param date date vector
 #' @author Daniel Rodak
@@ -79,23 +103,6 @@ switchNames <- function(x) {
   return(nm)
 }
 
-asSys <- function(account) {
-  paste0("[", account, "]")
-}
-
-namedVecToList <- function(x) {
-  sapply(unique(names(x)), function(y) unname(x[names(x) == y]), simplify = FALSE)
-}
-
-ifNull <- function(x, rep) {
-  if (is.null(x)) {
-    retval <- rep
-  } else {
-    retval <- ifelse(sapply(x, is.null), rep, x)
-  }
-  return(retval)
-}
-
 parseCharDR = function(dateRange) {
   stopifnot(dateRange %in% CNSTreportDateRanges)
   currDate <- Sys.Date()
@@ -116,4 +123,8 @@ parseCharDR = function(dateRange) {
   drType <- dateRange
   dateRange <- c(dtStart, dtEnd)
   return(list(drType = drType, dateRange = dateRange))
+}
+
+asSys <- function(account) {
+  paste0("[", account, "]")
 }

@@ -1,5 +1,40 @@
-CNSTsupportedBanks <- c("mbank", "idea")
+#' @export
+#' @noRd
 CNSTtransactionCols <- c("Date", "Type", "Title", "Payee", "Amount", "Category")
+#' @export
+#' @noRd
+CNSTtrOneRowTemplate <- data.frame(
+  Date = Sys.Date(),
+  Type = "",
+  Title = "",
+  Payee = "",
+  Amount = 0,
+  Category = "",
+  stringsAsFactors = FALSE
+)
+
+#' @export
+#' @noRd
+CNSTDTPLLanguage <- list(
+  lengthMenu = "Pokaż _MENU_ wierszy",
+  search = "Szukaj",
+  info = "Wyświetlam _START_ do _END_ wszystkich _TOTAL_ pozycji",
+  infoEmpty = "Wyświetlam 0 do 0 wszystkich 0 pozycji",
+  paginate = list(
+    'first' = "Pierwsza",
+    'last' = "Ostatnia",
+    'next' = "Następna",
+    'previous' = "Poprzednia"
+  )
+)
+
+#' @export
+#' @noRd
+CNSTtransactionColsPL <- c("Data", "Typ", "Tytuł", "Podmiot", "Kwota",
+                           "Kategoria", "Kategoria budżetowa", "Saldo")
+
+
+CNSTsupportedBanks <- c("mbank", "idea")
 CNSTtransactionTypes <- c("Date", "character", "character", "character", "numeric", "character")
 CNSTtransactionTemplate <- data.frame(
   Date = as.Date(character()),
@@ -8,15 +43,6 @@ CNSTtransactionTemplate <- data.frame(
   Payee = character(),
   Amount = numeric(),
   Category = character(),
-  stringsAsFactors = FALSE
-)
-CNSTtrOneRowTemplate <- data.frame(
-  Date = Sys.Date(),
-  Type = "",
-  Title = "",
-  Payee = "",
-  Amount = 0,
-  Category = "",
   stringsAsFactors = FALSE
 )
 CNSTdefaultBudgetCats <- enc2utf8(c(
@@ -58,21 +84,3 @@ CNSTreportDateRanges <- enc2utf8(c(
   "Ostatnie 3 miesiące" = "last3Months",
   "Ostatnie 6 miesięcy" = "last6Months",
   "Ostatni rok" = "lastYear"))
-
-#' @export
-CNSTDTPLLanguage <- list(
-  lengthMenu = "Pokaż _MENU_ wierszy",
-  search = "Szukaj",
-  info = "Wyświetlam _START_ do _END_ wszystkich _TOTAL_ pozycji",
-  infoEmpty = "Wyświetlam 0 do 0 wszystkich 0 pozycji",
-  paginate = list(
-    'first' = "Pierwsza",
-    'last' = "Ostatnia",
-    'next' = "Następna",
-    'previous' = "Poprzednia"
-  )
-)
-
-#' @export
-CNSTtransactionColsPL <- c("Data", "Typ", "Tytuł", "Podmiot", "Kwota",
-                           "Kategoria", "Kategoria budżetowa", "Saldo")

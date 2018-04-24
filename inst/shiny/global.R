@@ -5,6 +5,5 @@ library(DT)
 library(rhandsontable)
 library(budgetr)
 library(shinyFiles)
-source('directoryInput.R')
 
 budgetFile <- budget$new()
