@@ -69,6 +69,10 @@ function(input, output, session) {
     }
   )
 
+  observeEvent(input$saveBut, {
+    budgetFile$save()
+  })
+
 # Budget settings ---------------------------------------------------------
 
 
