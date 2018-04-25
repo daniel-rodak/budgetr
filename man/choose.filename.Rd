@@ -18,7 +18,7 @@ A length one character vector, character NA if 'Cancel' was selected.
 Display a file name selection dialog
 }
 \details{
-Uses an Apple Script/\link{\code{file.choose}} to display a file
+Uses an Apple Script/\link{choose.filename} to display a file
   selection dialog. With \code{default = NA}, the initial file selection is
   determined by default behavior of the "choose file" system command.
   Otherwise, paths are expanded with \link{path.expand}.

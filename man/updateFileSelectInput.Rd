@@ -14,7 +14,7 @@ updateFileSelectInput(session, inputId, value = NULL, ...)
 
 \item{value}{A directory path to set}
 
-\item{...}{Additional arguments passed to \link{\code{choose.file}}.  Only
+\item{...}{Additional arguments passed to \link{choose.file}. Only
 used if \code{value} is \code{NULL}.}
 }
 \description{

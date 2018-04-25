@@ -39,15 +39,15 @@ function(input, output, session) {
   observeEvent(
     ignoreNULL = TRUE,
     eventExpr = {
-      input$loadFile
+      input$loadBdgtFile
     },
     handlerExpr = {
-      if (input$loadFile > 0) {
-        path <- choose.file(default = readFileSelectInput(session, 'loadFile'),
+      if (input$loadBdgtFile > 0) {
+        path <- choose.file(default = readFileSelectInput(session, 'loadBdgtFile'),
                             caption = "Otwórz budżet")
 
         if (!is.na(path)) {
-          updateFileSelectInput(session, 'loadFile', value = path)
+          updateFileSelectInput(session, 'loadBdgtFile', value = path)
 
           tr <- try(budgetFile <<- budget$new(path))
           if (inherits(tr, 'try-error')) {

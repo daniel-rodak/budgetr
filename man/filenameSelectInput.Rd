@@ -21,7 +21,7 @@ A file name input control that can be added to a UI definition.
 Create a file name selection control to select a file name on the server
 }
 \details{
-This widget relies on \link{\code{choose.filename}}/ to present an
+This widget relies on \link{choose.filename}/ to present an
   interactive dialog to users for selecting a file name on the local filesystem.
   Therefore, this widget is intended for shiny apps that are run locally -
   i.e. on the same system that files/directories are to be accessed - and not
@@ -29,5 +29,5 @@ This widget relies on \link{\code{choose.filename}}/ to present an
 }
 \seealso{
 \link{updateFileSelectInput}, \link{readFileSelectInput},
-  \link[utils]{choose.file}, \link[utils]{choose.filename}
+  \link{choose.file}, \link{choose.filename}
 }

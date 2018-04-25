@@ -63,7 +63,7 @@ dashboardPage(
         fluidRow(
           box(
             width = 6, title = "Otwórz budżet",
-            fileSelectInput('loadFile', label = '')
+            fileSelectInput('loadBdgtFile', label = '')
           ),
           box(
             width = 6, title = "Zapisz budżet",

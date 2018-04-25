@@ -5,7 +5,7 @@
 #' @param default which folder to show initially (ignored on Windows)
 #' @param caption the caption on the selection dialog (ignored on Windows)
 #'
-#' @details Uses an Apple Script/\link{\code{file.choose}} to display a file
+#' @details Uses an Apple Script/\link{choose.file} to display a file
 #'   selection dialog. With \code{default = NA}, the initial file selection is
 #'   determined by default behavior of the "choose file" system command.
 #'   Otherwise, paths are expanded with \link{path.expand}.
@@ -58,7 +58,7 @@ choose.file = function(default = NA, caption = NA) {
 #' @param value Initial value.  Paths are exapnded via
 #'   \code{\link{path.expand}}.
 #'
-#' @details This widget relies on \link{\code{choose.file}}/ to present an
+#' @details This widget relies on \link{choose.file}/ to present an
 #'   interactive dialog to users for selecting a file on the local filesystem.
 #'   Therefore, this widget is intended for shiny apps that are run locally -
 #'   i.e. on the same system that files/directories are to be accessed - and not
@@ -67,7 +67,7 @@ choose.file = function(default = NA, caption = NA) {
 #' @return A file input control that can be added to a UI definition.
 #'
 #' @seealso \link{updateFileSelectInput}, \link{readFileSelectInput},
-#'   \link[utils]{choose.file}, \link[utils]{choose.filename}
+#'   \link{choose.file}, \link{choose.filename}
 #' @export
 fileSelectInput = function(inputId, label, value = NULL) {
   if (!is.null(value) && !is.na(value)) {
@@ -122,7 +122,7 @@ fileSelectInput = function(inputId, label, value = NULL) {
 #'   \code{shinyServer}.
 #' @param inputId The id of the input object.
 #' @param value A directory path to set
-#' @param ... Additional arguments passed to \link{\code{choose.file}}.  Only
+#' @param ... Additional arguments passed to \link{choose.file}. Only
 #'   used if \code{value} is \code{NULL}.
 #'
 #' @details Sends a message to the client, telling it to change the value of the
@@ -159,7 +159,7 @@ readFileSelectInput = function(session, inputId) {
 #' @param default which folder to show initially (ignored on Windows)
 #' @param caption the caption on the selection dialog (ignored on Windows)
 #'
-#' @details Uses an Apple Script/\link{\code{file.choose}} to display a file
+#' @details Uses an Apple Script/\link{choose.filename} to display a file
 #'   selection dialog. With \code{default = NA}, the initial file selection is
 #'   determined by default behavior of the "choose file" system command.
 #'   Otherwise, paths are expanded with \link{path.expand}.
@@ -232,7 +232,7 @@ choose.filename = function(default = NA, caption = NA) {
 #' @param value Initial value.  Paths are exapnded via
 #'   \code{\link{path.expand}}.
 #'
-#' @details This widget relies on \link{\code{choose.filename}}/ to present an
+#' @details This widget relies on \link{choose.filename}/ to present an
 #'   interactive dialog to users for selecting a file name on the local filesystem.
 #'   Therefore, this widget is intended for shiny apps that are run locally -
 #'   i.e. on the same system that files/directories are to be accessed - and not
@@ -241,7 +241,7 @@ choose.filename = function(default = NA, caption = NA) {
 #' @return A file name input control that can be added to a UI definition.
 #'
 #' @seealso \link{updateFileSelectInput}, \link{readFileSelectInput},
-#'   \link[utils]{choose.file}, \link[utils]{choose.filename}
+#'   \link{choose.file}, \link{choose.filename}
 #' @export
 filenameSelectInput <- function(inputId, label, value = NULL) {
   fileSelectInput(inputId, label, value)
@@ -253,7 +253,7 @@ filenameSelectInput <- function(inputId, label, value = NULL) {
 #'   \code{shinyServer}.
 #' @param inputId The id of the input object.
 #' @param value A directory path to set
-#' @param ... Additional arguments passed to \link{\code{choose.filename}}. Only
+#' @param ... Additional arguments passed to \link{choose.filename}. Only
 #'   used if \code{value} is \code{NULL}.
 #'
 #' @details Sends a message to the client, telling it to change the value of the
