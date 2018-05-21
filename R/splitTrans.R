@@ -23,37 +23,37 @@ splitTransactionUI <- function(id, accBut) {
     ),
     box(width = 6, collapsible = TRUE,
       fluidRow(
-        column(10, verbatimTextOutput(ns('res'), placeholder = TRUE)),
-        column(2, actionButton(ns('back'), '<x'))
+        calcColumn(10, class = 'calc-head', verbatimTextOutput(ns('res'), placeholder = TRUE)),
+        calcColumn(2, class = 'calc-back', actionButton(ns('back'), '<x'))
       ),
       fluidRow(
-        column(3, actionButton(ns('AC'), 'AC')),
-        column(3, actionButton(ns('pm'), '+/-')),
-        column(3, actionButton(ns('percent'), '%')),
-        column(3, actionButton(ns('divide'), '/'))
+        calcColumn(3, calcActionButton(ns('AC'), 'AC')),
+        calcColumn(3, calcActionButton(ns('pm'), '+/-')),
+        calcColumn(3, calcActionButton(ns('percent'), '%')),
+        calcColumn(3, calcActionButton(ns('divide'), '/'))
       ),
       fluidRow(
-        column(3, actionButton(ns('d7'), '7')),
-        column(3, actionButton(ns('d8'), '8')),
-        column(3, actionButton(ns('d9'), '9')),
-        column(3, actionButton(ns('times'), '*'))
+        calcColumn(3, calcActionButton(ns('d7'), '7')),
+        calcColumn(3, calcActionButton(ns('d8'), '8')),
+        calcColumn(3, calcActionButton(ns('d9'), '9')),
+        calcColumn(3, calcActionButton(ns('times'), '*'))
       ),
       fluidRow(
-        column(3, actionButton(ns('d4'), '4')),
-        column(3, actionButton(ns('d5'), '5')),
-        column(3, actionButton(ns('d6'), '6')),
-        column(3, actionButton(ns('minus'), '-'))
+        calcColumn(3, calcActionButton(ns('d4'), '4')),
+        calcColumn(3, calcActionButton(ns('d5'), '5')),
+        calcColumn(3, calcActionButton(ns('d6'), '6')),
+        calcColumn(3, calcActionButton(ns('minus'), '-'))
       ),
       fluidRow(
-        column(3, actionButton(ns('d1'), '1')),
-        column(3, actionButton(ns('d2'), '2')),
-        column(3, actionButton(ns('d3'), '3')),
-        column(3, actionButton(ns('plus'), '+'))
+        calcColumn(3, calcActionButton(ns('d1'), '1')),
+        calcColumn(3, calcActionButton(ns('d2'), '2')),
+        calcColumn(3, calcActionButton(ns('d3'), '3')),
+        calcColumn(3, calcActionButton(ns('plus'), '+'))
       ),
       fluidRow(
-        column(6, actionButton(ns('d0'), '0')),
-        column(3, actionButton(ns('comma'), ',')),
-        column(3, actionButton(ns('eq'), '='))
+        calcColumn(6, calcActionButton(ns('d0'), '0')),
+        calcColumn(3, calcActionButton(ns('comma'), ',')),
+        calcColumn(3, calcActionButton(ns('eq'), '='))
       )
     )
   )
@@ -229,4 +229,16 @@ toNumber <- function(str) {
 
 toChar <- function(num) {
   gsub("\\.", ",", as.character(num))
+}
+
+calcActionButton <- function(inputId, label, icon = NULL, width = NULL, ...) {
+  btn <- shiny::actionButton(inputId, label, icon = NULL, width = NULL, ...)
+  btn$attribs$class <- paste(btn$attribs$class, "calc-btn")
+  btn
+}
+
+calcColumn <- function(width, ..., offset = 0, class = 'calc-col') {
+  clm <- column(width, ..., offset = 0)
+  clm$attribs$class <- paste(clm$attribs$class, class)
+  clm
 }

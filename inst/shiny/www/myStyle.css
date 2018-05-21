@@ -1,3 +1,29 @@
 .datepicker {
   z-index: 2000 !important;
 }
+
+.calc-btn {
+  width:100%;
+  margin:0;
+  padding:0;
+  height:60px;
+}
+
+.calc-col {
+  margin:0;
+  padding:0;
+  width:60px;
+}
+
+.calc-head {
+  margin:0;
+  padding:0;
+  width:200px;
+  height:60px;
+}
+
+.calc-back {
+  margin:0;
+  padding:0;
+  width:40px;
+}
