@@ -20,6 +20,41 @@ splitTransactionUI <- function(id, accBut) {
           rHandsontableOutput(ns('splitTable'), height = "20vh")
         )
       )
+    ),
+    box(width = 6, collapsible = TRUE,
+      fluidRow(
+        column(10, verbatimTextOutput(ns('res'), placeholder = TRUE)),
+        column(2, actionButton(ns('back'), '<x'))
+      ),
+      fluidRow(
+        column(3, actionButton(ns('AC'), 'AC')),
+        column(3, actionButton(ns('pm'), '+/-')),
+        column(3, actionButton(ns('percent'), '%')),
+        column(3, actionButton(ns('divide'), '/'))
+      ),
+      fluidRow(
+        column(3, actionButton(ns('d7'), '7')),
+        column(3, actionButton(ns('d8'), '8')),
+        column(3, actionButton(ns('d9'), '9')),
+        column(3, actionButton(ns('times'), '*'))
+      ),
+      fluidRow(
+        column(3, actionButton(ns('d4'), '4')),
+        column(3, actionButton(ns('d5'), '5')),
+        column(3, actionButton(ns('d6'), '6')),
+        column(3, actionButton(ns('minus'), '-'))
+      ),
+      fluidRow(
+        column(3, actionButton(ns('d1'), '1')),
+        column(3, actionButton(ns('d2'), '2')),
+        column(3, actionButton(ns('d3'), '3')),
+        column(3, actionButton(ns('plus'), '+'))
+      ),
+      fluidRow(
+        column(6, actionButton(ns('d0'), '0')),
+        column(3, actionButton(ns('comma'), ',')),
+        column(3, actionButton(ns('eq'), '='))
+      )
     )
   )
 }
@@ -108,5 +143,90 @@ splitTransaction <- function(input, output, session,
     output$splitTable <- renderRHandsontable(NULL)
   })
 
+# Calculator --------------------------------------------------------------
+
+  display <- reactiveVal(value = "")
+  firstVal <- reactiveVal(value = 0)
+  secondVal <- reactiveVal(value = 0)
+  operator <- reactiveVal(value = getOperatorFunction("+"))
+
+  observeEvent(input$d0, {display(paste0(display(), 0))})
+  observeEvent(input$d1, {display(paste0(display(), 1))})
+  observeEvent(input$d2, {display(paste0(display(), 2))})
+  observeEvent(input$d3, {display(paste0(display(), 3))})
+  observeEvent(input$d4, {display(paste0(display(), 4))})
+  observeEvent(input$d5, {display(paste0(display(), 5))})
+  observeEvent(input$d6, {display(paste0(display(), 6))})
+  observeEvent(input$d7, {display(paste0(display(), 7))})
+  observeEvent(input$d8, {display(paste0(display(), 8))})
+  observeEvent(input$d9, {display(paste0(display(), 9))})
+  observeEvent(input$comma, {
+    if (!grepl(",", display()))
+      display(paste0(display(), ","))
+  })
+  observeEvent(input$plus, {
+    firstVal(toNumber(display()))
+    display("")
+    operator(getOperatorFunction("+"))
+  })
+  observeEvent(input$minus, {
+    firstVal(toNumber(display()))
+    display("")
+    operator(getOperatorFunction("-"))
+  })
+  observeEvent(input$times, {
+    firstVal(toNumber(display()))
+    display("")
+    operator(getOperatorFunction("*"))
+  })
+  observeEvent(input$divide, {
+    firstVal(toNumber(display()))
+    display("")
+    operator(getOperatorFunction("/"))
+  })
+  observeEvent(input$eq, {
+    secondVal(toNumber(display()))
+    result <- toChar(operator()(firstVal(), secondVal()))
+    display(result)
+  })
+  observeEvent(input$AC, {
+    display("")
+    firstVal(0)
+    secondVal(0)
+    operator(getOperatorFunction("+"))
+  })
+  observeEvent(input$back, {
+    req(display())
+    display(gsub(".$", "", display()))
+  })
+  observeEvent(input$pm, {
+    req(display())
+    display(toChar(-toNumber(display())))
+  })
+  observeEvent(input$percent, {
+    req(display())
+    display(toChar(toNumber(display()) / 100.0))
+  })
+
+  output$res <- renderText(display())
+
   return(newData)
+}
+
+getOperatorFunction <- function(symbol){
+  switch(
+    symbol,
+    `+` = function(a, b) a + b,
+    `-` = function(a, b) a - b,
+    `*` = function(a, b) a * b,
+    `/` = function(a, b) a / b)
+}
+
+toNumber <- function(str) {
+  as.numeric(gsub(",", ".", str))
+}
+
+
+toChar <- function(num) {
+  gsub("\\.", ",", as.character(num))
 }
