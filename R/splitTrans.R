@@ -23,8 +23,10 @@ splitTransactionUI <- function(id, accBut) {
     ),
     box(width = 6, collapsible = TRUE,
       fluidRow(
-        calcColumn(10, class = 'calc-head', verbatimTextOutput(ns('res'), placeholder = TRUE)),
-        calcColumn(2, class = 'calc-back', actionButton(ns('back'), '<x'))
+        calcColumn(12, class = 'calc-head', verbatimTextOutput(ns('state'), placeholder = TRUE))
+      ),
+      fluidRow(
+        calcColumn(12, class = 'calc-head', textInput(ns('resIn'), label = NULL))
       ),
       fluidRow(
         calcColumn(3, calcActionButton(ns('AC'), 'AC')),
@@ -146,9 +148,10 @@ splitTransaction <- function(input, output, session,
 # Calculator --------------------------------------------------------------
 
   display <- reactiveVal(value = "")
-  firstVal <- reactiveVal(value = 0)
-  secondVal <- reactiveVal(value = 0)
+  firstVal <- reactiveVal(value = NA)
+  secondVal <- reactiveVal(value = NA)
   operator <- reactiveVal(value = getOperatorFunction("+"))
+  charOp <- reactiveVal(value = "+")
 
   observeEvent(input$d0, {display(paste0(display(), 0))})
   observeEvent(input$d1, {display(paste0(display(), 1))})
@@ -161,43 +164,102 @@ splitTransaction <- function(input, output, session,
   observeEvent(input$d8, {display(paste0(display(), 8))})
   observeEvent(input$d9, {display(paste0(display(), 9))})
   observeEvent(input$comma, {
-    if (!grepl(",", display()))
+    if (!grepl(",", display())) {
+      display(input$resIn)
       display(paste0(display(), ","))
+    }
   })
   observeEvent(input$plus, {
-    firstVal(toNumber(display()))
-    display("")
+    if (is.na(firstVal())) {
+      display(input$resIn)
+      firstVal(toNumber(display()))
+      display("")
+    } else {
+      display(input$resIn)
+      secondVal(toNumber(display()))
+      if (!is.na(secondVal())) {
+        result <- toChar(operator()(firstVal(), secondVal()))
+        display("")
+        firstVal(toNumber(result))
+        secondVal(NA)
+      }
+    }
     operator(getOperatorFunction("+"))
+    charOp("+")
   })
   observeEvent(input$minus, {
-    firstVal(toNumber(display()))
-    display("")
+    if (is.na(firstVal())) {
+      display(input$resIn)
+      firstVal(toNumber(display()))
+      display("")
+    } else {
+      display(input$resIn)
+      secondVal(toNumber(display()))
+      if (!is.na(secondVal())) {
+        result <- toChar(operator()(firstVal(), secondVal()))
+        display("")
+        firstVal(toNumber(result))
+        secondVal(NA)
+      }
+    }
     operator(getOperatorFunction("-"))
+    charOp("-")
   })
   observeEvent(input$times, {
-    firstVal(toNumber(display()))
-    display("")
+    if (is.na(firstVal())) {
+      display(input$resIn)
+      firstVal(toNumber(display()))
+      display("")
+    } else {
+      display(input$resIn)
+      secondVal(toNumber(display()))
+      if (!is.na(secondVal())) {
+        result <- toChar(operator()(firstVal(), secondVal()))
+        display("")
+        firstVal(toNumber(result))
+        secondVal(NA)
+      }
+    }
     operator(getOperatorFunction("*"))
+    charOp("*")
   })
   observeEvent(input$divide, {
-    firstVal(toNumber(display()))
-    display("")
+    if (is.na(firstVal())) {
+      display(input$resIn)
+      firstVal(toNumber(display()))
+      display("")
+    } else {
+      display(input$resIn)
+      secondVal(toNumber(display()))
+      if (!is.na(secondVal())) {
+        result <- toChar(operator()(firstVal(), secondVal()))
+        display("")
+        firstVal(toNumber(result))
+        secondVal(NA)
+      }
+    }
     operator(getOperatorFunction("/"))
+    charOp("/")
   })
   observeEvent(input$eq, {
-    secondVal(toNumber(display()))
-    result <- toChar(operator()(firstVal(), secondVal()))
-    display(result)
+    if (!is.na(firstVal())) {
+      display(input$resIn)
+      secondVal(toNumber(display()))
+      if (!is.na(secondVal())) {
+        display(input$resIn)
+        result <- toChar(operator()(firstVal(), secondVal()))
+        display("")
+        firstVal(toNumber(result))
+        secondVal(NA)
+      }
+    }
   })
   observeEvent(input$AC, {
     display("")
-    firstVal(0)
-    secondVal(0)
+    firstVal(NA)
+    secondVal(NA)
     operator(getOperatorFunction("+"))
-  })
-  observeEvent(input$back, {
-    req(display())
-    display(gsub(".$", "", display()))
+    charOp("+")
   })
   observeEvent(input$pm, {
     req(display())
@@ -208,7 +270,23 @@ splitTransaction <- function(input, output, session,
     display(toChar(toNumber(display()) / 100.0))
   })
 
-  output$res <- renderText(display())
+  output$state <- renderText({
+    if (!is.na(firstVal())) {
+      paste(firstVal(), charOp())
+    }
+  })
+  observeEvent(display(), {
+    updateTextInput(session, "resIn", value = display())
+  })
+
+  observeEvent(input$resIn, {
+    x <- input$resIn
+    lastChar <- substr(x, nchar(x), nchar(x))
+    validChars <- c(0:9, ",", ".")
+    if (!(lastChar %in% validChars)) {
+      updateTextInput(session, "resIn", value = gsub(".$", "", x))
+    }
+  })
 
   return(newData)
 }
@@ -223,7 +301,11 @@ getOperatorFunction <- function(symbol){
 }
 
 toNumber <- function(str) {
-  as.numeric(gsub(",", ".", str))
+  if (str == "")
+    ret <- NA
+  else
+    ret <- as.numeric(gsub(",", ".", str))
+  return(ret)
 }
 
 
