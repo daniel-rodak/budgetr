@@ -79,14 +79,14 @@ splitTransaction <- function(input, output, session,
   output$leftAmount <- renderText({
     req(input$splitTable)
     dfSplit <- spl_to_r(input$splitTable)
-    unassigned <- DF_sel()$Amount - sum(dfSplit$Kwota)
+    unassigned <- round(DF_sel()$Amount - sum(dfSplit$Kwota), 2)
     sprintf("Nieprzydzielona kwota: %0.2f zł", unassigned)
   })
 
   newData <- reactive({
     req(input$splitTable)
     dfSplit <- spl_to_r(input$splitTable)
-    if (sum(dfSplit$Kwota) != DF_sel()$Amount) {
+    if (round(sum(dfSplit$Kwota), 2) != round(DF_sel()$Amount, 2)) {
       showNotification(paste(enc2utf8("Suma podkategorii nie równa się"), DF_sel()$Amount),
                        type = 'warning', duration = 20)
       newData <- NULL
