@@ -178,7 +178,7 @@ dashboardPage(
           box(
             width = 12,
             title = "Zaimportowane dane",
-            rHandsontableOutput('dataTable', height = "30vh")
+            rHandsontableOutput('dataTable', height = "40vh")
           )
         ),
         fluidRow(

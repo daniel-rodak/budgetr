@@ -9,6 +9,7 @@ function(input, output, session) {
   budgetName <- reactive({
     timer()
     budgetFile$name
+    print(budgetFile$name)
   })
   output$loadedBudget <- renderText(budgetName())
 
@@ -45,7 +46,7 @@ function(input, output, session) {
       if (input$loadBdgtFile > 0) {
         path <- choose.file(default = readFileSelectInput(session, 'loadBdgtFile'),
                             caption = "Otwórz budżet")
-
+        print(path)
         if (!is.na(path)) {
           updateFileSelectInput(session, 'loadBdgtFile', value = path)
 

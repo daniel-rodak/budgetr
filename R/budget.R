@@ -50,7 +50,7 @@
 budget <- R6::R6Class(
   classname = "budget",
   public = list(
-    name = enc2utf8("Nowy Budżet"),
+    name = enc2native("Nowy Budżet"),
     initialize = function(path = NULL) {
       if (!is.null(path)) {
         bdgt <- readRDS(path)

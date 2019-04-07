@@ -38,6 +38,8 @@ choose.file = function(default = NA, caption = NA) {
       # user canceled
       path = NA
     }
+    # To resolve issue with FinderKit in High Sierra
+    path <- path[length(path)]
   } else if (Sys.info()['sysname'] == 'Windows') {
       path <- try(file.choose())
       if (inherits(path, 'try-error')) {
@@ -192,6 +194,7 @@ choose.filename = function(default = NA, caption = NA) {
       # user canceled
       path = NA
     }
+    path = path[length(path)]
 #   } else if (Sys.info()['sysname'] == 'Linux') {
 #     command = 'zenity'
 #     args = '--file-selection --directory --title="Choose a folder"'

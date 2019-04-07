@@ -52,9 +52,12 @@ readMbank <- function(file, ...) {
 readIdea <- function(file, ...) {
   tbl <- read.table(file, header = TRUE, sep = ";", dec = ",",
                     quote = "\"", fill = TRUE, comment.char = "",
-                    skip = 1, stringsAsFactors = FALSE,
-                    fileEncoding = 'UTF-8', ...)
-  tbl <- tbl[, c(2, 16, 15, 10, 5)]
+                    skip = 1, stringsAsFactors = FALSE, ...)
+  if (Sys.info()['sysname'] == 'Windows') {
+    tbl <- tbl[, c(2, 16, 15, 10, 5)]
+  } else {
+    tbl <- tbl[, c(2, 24, 22, 17, 10)]
+  }
   colnames(tbl) <- c("Date", "Type", "Title", "Payee", "Amount")
   tbl$Date <- as.Date(as.character(tbl$Date), "%Y%m%d")
   tbl$Amount <- ifelse(tbl$Type == 'uznanie', 1, -1) * tbl$Amount
