@@ -42,7 +42,25 @@ readMbank <- function(file, ...) {
                     encoding = enc, ...)
   tbl <- tbl[1:(nrow(tbl) - 2), c(2, 3, 4, 5, 7)]
   colnames(tbl) <- c("Date", "Type", "Title", "Payee", "Amount")
-  tbl$Date <- as.Date(tbl$Date)
+  cardTr <- grepl("DATA TRANSAKCJI: ", tbl$Title)
+  cardDateStart <- vapply(
+    gregexpr("DATA TRANSAKCJI: ", tbl$Title),
+    function(x) {attr(x, "match.length") + x[1]},
+    numeric(1L)
+  )
+  cardDate <- vapply(
+    seq_along(tbl$Title),
+    function(x) {
+      if (cardTr[x]) {
+        ret <- substr(tbl$Title[x], cardDateStart[x], 1000)
+      } else {
+        ret <- ""
+      }
+      ret
+    },
+    character(1L)
+  )
+  tbl$Date <- as.Date(ifelse(cardTr, cardDate, tbl$Date))
   tbl$Amount <- as.numeric(gsub(",", ".", gsub(" ", "", tbl$Amount)))
   tbl$Category <- rep("", nrow(tbl))
   return(tbl)

@@ -1,7 +1,7 @@
 Package: budgetr
 Type: Package
 Title: Package for managing home budget
-Version: 0.1.1
+Version: 0.1.2
 Author: Marzena Rodak <marzena.ewa.rodak@gmail.com>
     Daniel Rodak <daniel.rodak1@gmail.com>
 Maintainer: Daniel Rodak <daniel.rodak1@gmail.com>
