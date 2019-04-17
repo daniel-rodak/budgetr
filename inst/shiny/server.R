@@ -9,7 +9,6 @@ function(input, output, session) {
   budgetName <- reactive({
     timer()
     budgetFile$name
-    print(budgetFile$name)
   })
   output$loadedBudget <- renderText(budgetName())
 
@@ -250,12 +249,13 @@ function(input, output, session) {
   })
   output$transData <- DT::renderDataTable(dfTrans(), filter = 'top',
                                           options = list(
-                                            searching = FALSE,
+                                            searching = TRUE,
                                             language = CNSTDTPLLanguage,
                                             info = FALSE,
                                             paging = FALSE,
                                             scrollY = '50vh',
-                                            scrollCollapse= TRUE
+                                            scrollCollapse= TRUE,
+                                            dom = "lrtp"
                                           ), colnames = CNSTtransactionColsPL)
 
   dfTransEdit <- reactiveVal()

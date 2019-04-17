@@ -316,14 +316,15 @@ budget <- R6::R6Class(
                                    function(x) names(private$categories[private$categories == x]),
                                    FUN.VALUE = character(1L), USE.NAMES = FALSE)
       init <- private$accInit[account]
-      trn <- trn[order(trn$Date, row.names(trn)), ]
+      trn <- trn[order(trn$Date, as.numeric(row.names(trn))), ]
       trn$Balance <- init + cumsum(trn$Amount)
       return(trn)
     },
     getTransactions = function(accounts, noSys = TRUE) {
       ret <- do.call(rbind, lapply(accounts, function(x) {
           dfr <- self$getTransactionTable(x)
-          cbind(Account = x, dfr)
+          if (nrow(dfr) > 0)
+            cbind(Account = x, dfr)
         }))
       if (noSys) {
         combs <- combn(accounts, 2)
@@ -334,7 +335,7 @@ budget <- R6::R6Class(
         }
       }
       init <- sum(private$accInit[accounts])
-      ret <- ret[order(ret$Date, row.names(ret)), ]
+      ret <- ret[order(ret$Date, as.numeric(row.names(ret))), ]
       ret$Balance <- init + cumsum(ret$Amount)
       ret$ParCat <- stringi::stri_split_fixed(ret$Category, ":", simplify = TRUE)[, 1]
       ret$ParBudgCat <- stringi::stri_split_fixed(ret$BudgetCategory, ":", simplify = TRUE)[, 1]
