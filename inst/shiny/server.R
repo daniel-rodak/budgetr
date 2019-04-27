@@ -63,6 +63,7 @@ function(input, output, session) {
             updateSelectInput(session, "reportChoice",
                               choices = ifNull(rownames(budgetFile$listReports()), ""))
             budgetCats(unname(budgetFile$getCategories()))
+            budgetPayees(budgetFile$getPayees())
           }
         }
       }
@@ -153,6 +154,7 @@ function(input, output, session) {
   })
 
   budgetCats <- reactiveVal(unname(budgetFile$getCategories()))
+  budgetPayees <- reactiveVal(budgetFile$getPayees())
 
   observeEvent(input$addNewCat, {
     tr <- try(budgetFile$addCategory(input$newCatName, input$newCatBudgCat))
@@ -271,7 +273,10 @@ function(input, output, session) {
       hot_context_menu(allowColEdit = FALSE, allowRowEdit = FALSE) %>%
       hot_col(col = "Kategoria", type = "autocomplete",
               source = budgetCats(),
-              strict = TRUE)
+              strict = TRUE) %>%
+      hot_col(col = "Podmiot", type = "autocomplete",
+              source = budgetPayees(),
+              strict = FALSE)
   })
 
   exTrigger <- reactiveVal(0)
@@ -349,7 +354,10 @@ function(input, output, session) {
       hot_context_menu(allowColEdit = FALSE) %>%
       hot_col(col = "Kategoria", type = "autocomplete",
               source = budgetCats(),
-              strict = TRUE)
+              strict = TRUE) %>%
+      hot_col(col = "Podmiot", type = "autocomplete",
+              source = budgetPayees(),
+              strict = FALSE)
   })
 
   trigger <- reactiveVal(0)
@@ -379,6 +387,7 @@ function(input, output, session) {
         trigger(trigger() + 1)
       }
     }
+    budgetPayees(budgetFile$getPayees())
   })
 
 # Reports -----------------------------------------------------------------
