@@ -33,7 +33,7 @@ dashboardPage(
       selectInput("addDataAcc", "Wybierz konto docelowe",
                   choices = budgetFile$getAccounts()),
       checkboxInput("autoSys", "Auto transakcje systemowe", value = TRUE),
-      actionButton("addData", "Wgraj")
+      actionButton("addData", "Wgraj", disabled = NA)
     ),
     conditionalPanel(condition = "input.menu1 == 'trans'",
       selectInput("transDataAcc", "Wybierz konto docelowe",

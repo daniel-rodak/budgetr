@@ -1,5 +1,6 @@
 library(magrittr)
 library(plotly)
+library(shinyjs)
 
 function(input, output, session) {
   session$onSessionEnded(function() {
@@ -347,6 +348,11 @@ function(input, output, session) {
     DF(CNSTtrOneRowTemplate)
   })
 
+  observeEvent(reactive(nrow(DF()))(), {
+    if (isTruthy(DF()))
+      shinyjs::enable("addData")
+  })
+
   output$dataTable <- renderRHandsontable({
     req(DF())
     rhandsontable(DF(), stretchH = "all", selectCallback = TRUE,
@@ -384,6 +390,7 @@ function(input, output, session) {
       } else if (isTruthy(input$transDataAcc)){
         dfTrans(budgetFile$getTransactionTable(input$transDataAcc))
         DF(NULL)
+        shinyjs::disable("addData")
         trigger(trigger() + 1)
       }
     }
