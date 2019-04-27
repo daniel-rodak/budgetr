@@ -62,6 +62,7 @@ budget <- R6::R6Class(
         private$categories <- bdgt$categories
         private$budgetCats <- bdgt$budgetCats
         private$transactions <- bdgt$transactions
+        private$payees <- bdgt$payees
         private$reports <- bdgt$reports
         self$name <- gsub("(.rds)$", "", basename(path))
       } else {
@@ -72,6 +73,7 @@ budget <- R6::R6Class(
         private$categories <- character()
         private$budgetCats <- CNSTdefaultBudgetCats
         private$transactions <- list()
+        private$payees <- character()
         private$reports <- list()
       }
       return(invisible(self))
@@ -90,6 +92,7 @@ budget <- R6::R6Class(
         categories = private$categories,
         budgetCats = private$budgetCats,
         transactions = private$transactions,
+        payees = private$payees,
         reports = private$reports
       )
       saveRDS(saveObj, file = private$path)
@@ -271,6 +274,7 @@ budget <- R6::R6Class(
 
       private$transactions[[account]] <- rbind(private$transactions[[account]], transaction)
       private$updateAccBalance(account)
+      private$updatePayees()
       return(invisible(self))
     },
     deleteTransaction = function(account, trIds, autoSys = TRUE) {
@@ -340,6 +344,10 @@ budget <- R6::R6Class(
       ret$ParCat <- stringi::stri_split_fixed(ret$Category, ":", simplify = TRUE)[, 1]
       ret$ParBudgCat <- stringi::stri_split_fixed(ret$BudgetCategory, ":", simplify = TRUE)[, 1]
       return(ret)
+    },
+
+    getPayees = function() {
+      return(private$payees)
     },
 
     addReport = function(report) {
@@ -430,15 +438,25 @@ budget <- R6::R6Class(
     categories = character(),
     budgetCats = character(),
     transactions = list(),
+    payees = character(),
     reports = list(),
 
     updateAccBalance = function(account) {
       private$accBalance[[account]] <- private$accInit[[account]] + sum(private$transactions[[account]]$Amount)
     },
 
+    updatePayees = function() {
+      payees <- character(0L)
+      for (acc in private$accounts) {
+        tbl <- self$getTransactionTable(acc)
+        payees <- c(payees, tbl$Payee)
+      }
+      private$payees <- unique(payees)
+    },
+
     validateBudget = function(x) {
       stopifnot(is.list(x))
-      stopifnot(all(names(x) == c("path", "accounts", "accInit", "accBalance", "categories", "budgetCats", "transactions", "reports")))
+      stopifnot(all(names(x) == c("path", "accounts", "accInit", "accBalance", "categories", "budgetCats", "transactions", "payees", "reports")))
       stopifnot(is.character(x$path))
       stopifnot(length(x$path) == 1)
       stopifnot(is.character(x$accounts))
@@ -454,6 +472,7 @@ budget <- R6::R6Class(
       stopifnot(all(vapply(x$transactions, function(y) all(colnames(y) == CNSTtransactionCols), logical(1L))))
       stopifnot(all(vapply(x$transactions, function(y) all(vapply(y, class, character(1L), USE.NAMES = FALSE) == CNSTtransactionTypes), logical(1L))))
       stopifnot(all(names(x$transactions) == x$accounts))
+      stopifnot(is.character(x$payees))
     },
 
     validateAddCategory = function(category, budgetCat) {
